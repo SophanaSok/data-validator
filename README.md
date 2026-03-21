@@ -1,229 +1,297 @@
 # Bid Data Validator
 
-Browser-based validator for scraped bid JSON files. This tool lets you validate one or many JSON files against a configurable schema, inspect failures, and export clean/error-separated outputs.
+A browser-based validator for scraped bid JSON files.
 
-## Features
+This app lets you:
+- Select required fields from a list (plus optional manual field names).
+- Apply those required fields directly into the schema.
+- Validate one or many JSON files in a single run.
+- Review pass/fail summaries and top validation errors.
+- Click any top error row to inspect the full JSON record.
+- Export passing records, failing records, and CSV error reports.
 
-- Batch validation for multiple JSON files in one run.
-- Drag-and-drop file upload or click-to-browse input.
-- Editable JSON schema directly in the UI.
-- Required field selector that updates schema requirements automatically.
-- Record-level validation using Ajv (JSON Schema validator).
-- Support for common input shapes:
-	- Top-level `Export` array.
-	- Raw top-level array.
-	- First object key containing an array-like payload.
-- Validation summary dashboard with:
-	- Pass rate.
-	- Good record count.
-	- Bad record count.
-	- Total errors found.
+## Quick 60-Second Start
+
+1. Open `index.html` in your browser, or run `python3 -m http.server 8000` and open `http://localhost:8000`.
+2. In **Select Required Fields**, choose at least one field and click **Apply to Schema**.
+3. Drag one or more JSON files into the drop zone.
+4. Click **Validate Batch**.
+5. Review pass rate and gate status.
+6. Click a row in **Top Errors** to inspect the full JSON record.
+7. Download `good-bids.json`, `bad-bids.json`, or `errors.csv`.
+
+## What The App Does
+
+The validator checks each input record against the schema found in the JSON Schema editor.
+
+High-level flow:
+1. You choose required fields and click **Apply to Schema**.
+2. The app writes those fields into `schema.properties.Export.items.required`.
+3. You load one or more JSON files.
+4. The app validates every record and builds:
+   - Good records
+   - Bad records
+   - Error details per failing field
+5. The app shows a summary, top errors, and download buttons.
+
+## Current Features
+
+- Batch validation across multiple `.json` files.
+- Drag-and-drop upload and click-to-browse upload.
+- Selected-file list with per-file remove action.
+- Editable schema text area.
+- Required field selector (`Ctrl+Click` / `Cmd+Click` for multi-select).
+- Manual required field input (comma or newline separated).
+- Progress bar during validation.
+- Validation dashboard:
+  - Pass rate
+  - Good records count
+  - Bad records count
+  - Total errors
 - Pipeline gate status:
-	- `Pipeline Ready` when pass rate is at least `95%`.
-	- `Gate Failed` when pass rate is below `95%`.
-- Top 50 error table including file name, record index, field path, and error message.
-- One-click exports:
-	- `good-bids.json` (passing records)
-	- `bad-bids.json` (failing records)
-	- `errors.csv` (flat error report)
-- Light/dark theme toggle.
+  - `Pipeline Ready` when pass rate is at least `95%`
+  - `Gate Failed` when pass rate is below `95%`
+- Top errors table (first 50 errors).
+- Clickable top error rows with full JSON record viewer.
+- Export buttons:
+  - `good-bids.json`
+  - `bad-bids.json`
+  - `errors.csv`
+- Light/Dark mode toggle.
 
-## Tech Stack
+## Required Fields Selector
 
-- Plain HTML/CSS/JavaScript (no build step required).
-- [Ajv v8](https://ajv.js.org/) via CDN for schema validation.
-- [SortableJS](https://sortablejs.github.io/Sortable/) is included via CDN (currently not used by the page behavior).
+The built-in required-field options currently include:
+- `ProjectCode`
+- `AgentID`
+- `LegacyAgentID`
+- `Title`
+- `BidStatus`
+- `BidType`
+- `BidURL`
+- `Description`
+- `PublishedDate`
+- `DueDate`
+- `AwardDate`
+- `ResourceURL`
+- `AgentName`
+- `Jurisdiction`
+- `BidDocuments[]`
 
-## Quick Start
+Notes:
+- `BidDocuments[]` is normalized to `BidDocuments` when applied.
+- Manual required fields are merged with selected fields.
+- Duplicate field names are removed automatically.
 
-### 1. Clone and open
+## Input JSON Shapes Supported
 
-```bash
-git clone https://github.com/SophanaSok/data-validator.git
-cd data-validator
+Each file can be one of these shapes:
+1. Object with `Export` key:
+
+```json
+{
+  "Export": [
+    { "ProjectCode": "SRC1001" }
+  ]
+}
 ```
 
-### 2. Run locally
+2. Top-level array:
 
-You can either open `index.html` directly in a browser, or serve it with a local static server.
+```json
+[
+  { "ProjectCode": "SRC1001" }
+]
+```
 
-Option A: open file directly
+3. Object where the first key contains the record array:
 
+```json
+{
+  "SomeWrapper": [
+    { "ProjectCode": "SRC1001" }
+  ]
+}
+```
+
+## Validation Behavior (Current Implementation)
+
+The app uses a custom validator in `script.js` (not Ajv).
+
+Supported checks from the schema:
+- `type: object`, `array`, `string`
+- `required`
+- `minLength`
+- `minItems`
+- `pattern` (used here as non-empty check when pattern exists)
+- `enum` (checked for required string fields)
+- `format: uri` (checked for required string fields)
+- `format: date-time` (checked for required string fields)
+
+Important behavior details:
+- Empty values are treated as missing for required checks when value is:
+  - `undefined`
+  - `null`
+  - empty/whitespace string
+  - empty array
+- Invalid JSON files are skipped silently during batch parse.
+- Top error table shows first 50 errors only.
+- Full error data is still available in downloads.
+
+## How To Use The App
+
+### 1. Start the app
+
+Option A: Open directly
 - Open `index.html` in your browser.
 
-Option B: serve over HTTP (recommended)
+Option B: Serve locally (recommended)
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Then visit:
+Then open `http://localhost:8000`.
 
-- `http://localhost:8000`
+### 2. Choose required fields
 
-### 3. Validate data
+1. In **Select Required Fields**, multi-select fields.
+2. Optionally add more names in **Manual Required Fields**.
+3. Click **Apply to Schema**.
+4. Confirm the success message with the count of required fields applied.
 
-1. Select required fields in the multi-select list.
-2. Click `Apply to Schema` to update schema `required` rules.
-3. Review/edit the schema JSON if needed.
-4. Drag in one or more `.json` files (or click to browse).
-5. Click `Validate Batch`.
-6. Inspect pass rate, gate status, and top errors.
-7. Download `good-bids.json`, `bad-bids.json`, and/or `errors.csv`.
+### 3. Review schema
 
-## Input Expectations
+- Verify schema JSON in the editor.
+- Make additional edits if needed.
+- Ensure `properties.Export.items` exists, otherwise validation cannot run.
 
-- Files must be valid JSON.
-- Each record is validated against `schema.properties.Export.items`.
-- The default schema expects bid-like fields such as:
-	- `ProjectCode` pattern `^SRC\d+$`
-	- `BidStatus` enum values (`Active`, `Awarded`, `Closed`, `Cancelled`)
-	- URI format for `BidURL`
-	- Date-time format for fields like `PublishedDate` and `DueDate`
+### 4. Load files
 
-## Sample Data
+- Drag files into the drop zone, or click to browse.
+- Confirm file list appears.
+- Remove files with the **Remove** button if needed.
 
-### Example input (valid shape)
+### 5. Run validation
 
-```json
-{
-	"Export": [
-		{
-			"ProjectCode": "SRC1001",
-			"AgentID": "AG-7781",
-			"Title": "Road Rehabilitation - Phase 2",
-			"BidStatus": "Active",
-			"BidURL": "https://procurement.example.org/bids/SRC1001",
-			"PublishedDate": "2026-03-20T08:30:00Z",
-			"DueDate": "2026-04-15T17:00:00Z",
-			"AgentName": "City Procurement Office"
-		},
-		{
-			"ProjectCode": "BAD-42",
-			"AgentID": "",
-			"Title": "Bid",
-			"BidStatus": "InReview",
-			"BidURL": "not-a-url",
-			"PublishedDate": "03/20/2026",
-			"DueDate": "tomorrow",
-			"AgentName": ""
-		}
-	]
-}
-```
+- Click **Validate Batch**.
+- Wait for progress to complete.
+- Review pass rate, gate status, and top errors.
 
-### Example outputs after validation
+### 6. Inspect full record from top errors
 
-`good-bids.json` (records that pass schema rules)
+1. In **Top Errors**, click any row.
+2. View full JSON in **Selected Error Record**.
+3. Use this to debug exactly what failed in context.
 
-```json
-[
-	{
-		"ProjectCode": "SRC1001",
-		"AgentID": "AG-7781",
-		"Title": "Road Rehabilitation - Phase 2",
-		"BidStatus": "Active",
-		"BidURL": "https://procurement.example.org/bids/SRC1001",
-		"PublishedDate": "2026-03-20T08:30:00Z",
-		"DueDate": "2026-04-15T17:00:00Z",
-		"AgentName": "City Procurement Office"
-	}
-]
-```
+### 7. Export outputs
 
-`bad-bids.json` (records that fail one or more rules)
+- **Good Records JSON**: all passing records.
+- **Bad Records JSON**: all failing records.
+- **Error Report CSV**: flattened error details.
 
-```json
-[
-	{
-		"ProjectCode": "BAD-42",
-		"AgentID": "",
-		"Title": "Bid",
-		"BidStatus": "InReview",
-		"BidURL": "not-a-url",
-		"PublishedDate": "03/20/2026",
-		"DueDate": "tomorrow",
-		"AgentName": ""
-	}
-]
-```
+## Example Workflow
 
-`errors.csv` (flattened validation errors)
+1. Select `ProjectCode`, `BidURL`, `PublishedDate`, and `ResourceURL`.
+2. Click **Apply to Schema**.
+3. Upload one or more lambda output files.
+4. Click **Validate Batch**.
+5. Open a top error row and inspect the full record.
+6. Fix data upstream and rerun validation.
+7. Export clean and error outputs.
 
-```csv
-File,Record,Field,Error
-lambda-sample.json,1,/ProjectCode,must match pattern "^SRC\\d+$"
-lambda-sample.json,1,/AgentID,must NOT have fewer than 1 characters
-lambda-sample.json,1,/Title,must NOT have fewer than 5 characters
-lambda-sample.json,1,/BidStatus,must be equal to one of the allowed values
-lambda-sample.json,1,/BidURL,must match format "uri"
-lambda-sample.json,1,/PublishedDate,must match format "date-time"
-lambda-sample.json,1,/DueDate,must match format "date-time"
-```
+## UI Guide
 
-## Notes
-
-- Invalid JSON files are skipped during batch parsing.
-- Errors are captured per failing record and field path.
-- The error table displays only the first 50 errors for readability; full details are available in exported files.
+- **Theme Toggle**: switches between light and dark mode.
+- **Validation Engine Badge**: currently indicates local validation.
+- **Results Panel**: regenerated on each validation run.
+- **Top Errors Table**:
+  - Click row to load record detail panel.
+  - Keyboard accessible with `Tab`, `Enter`, or `Space`.
 
 ## Troubleshooting
 
 ### "Invalid schema"
 
-- Cause: malformed JSON in the schema editor.
-- Fix:
-	- Make sure keys and string values use double quotes.
-	- Remove trailing commas.
-	- Validate JSON with a formatter/linter before pasting.
+Cause:
+- Schema text is not valid JSON.
+
+Fix:
+- Use double quotes for keys/strings.
+- Remove trailing commas.
+- Validate JSON syntax before running.
+
+### "Schema must include properties.Export.items"
+
+Cause:
+- Schema structure is missing expected path.
+
+Fix:
+- Ensure schema contains:
+
+```json
+{
+  "properties": {
+    "Export": {
+      "items": { "type": "object" }
+    }
+  }
+}
+```
 
 ### "Load JSON files"
 
-- Cause: no files are currently selected.
-- Fix:
-	- Drag files onto the drop area again, or click and reselect files.
-	- Confirm selected files have a `.json` extension.
+Cause:
+- No files selected.
 
-### Many records fail required fields
+Fix:
+- Add files via drag-drop or picker.
 
-- Cause: required field list was updated and schema now requires additional keys.
-- Fix:
-	- Re-check selected required fields and click `Apply to Schema` again.
-	- Ensure incoming records include all required keys exactly (case-sensitive).
+### Many required-field failures
 
-### Date/time fields fail validation
+Cause:
+- Selected/manual required fields are stricter than incoming data.
 
-- Cause: values are not RFC 3339 date-time strings.
-- Fix:
-	- Use values like `2026-03-20T08:30:00Z`.
-	- Avoid local formats like `03/20/2026` or natural language values like `tomorrow`.
+Fix:
+- Revisit selected required fields.
+- Confirm exact case-sensitive key names in data.
 
-### URL fields fail validation
+### URI/date-time errors are unexpected
 
-- Cause: value is not a valid URI.
-- Fix:
-	- Include a full scheme such as `https://`.
-	- Example valid format: `https://example.com/bid/123`.
+Cause:
+- `format` checks are only enforced when the field is required.
 
-### Records are not being picked up from file
+Fix:
+- Ensure those fields are required if you want strict checks.
+- Or update validator logic in `script.js` to enforce formats for optional fields too.
 
-- Cause: top-level JSON structure does not match expected shape.
-- Fix:
-	- Prefer `{ "Export": [ ... ] }`.
-	- A top-level array is also accepted.
-	- If using an object wrapper, ensure the first key points to an array of records.
+### Top error row click does nothing
+
+Cause:
+- No rows rendered (no errors) or selected index is unavailable.
+
+Fix:
+- Confirm there are failing rows in Top Errors.
+- Re-run validation if results were cleared.
 
 ## Project Structure
 
-- `index.html`: Full application UI and logic.
-- `README.md`: Project documentation.
+- `index.html`: App layout, controls, and default schema.
+- `styles.css`: Theme and component styling.
+- `script.js`: State, validation flow, and rendering logic.
+- `README.md`: Documentation and user guide.
 
-## Future Improvements
+## Development Notes
 
-- Add persisted schema profiles.
-- Add field mapping and normalization helpers.
-- Add per-file summary cards.
-- Add test fixtures and automated browser tests.
+- No build step is required.
+- No external runtime dependency is required for validation logic.
+- SortableJS is loaded in `index.html` but currently not used by app behavior.
+
+## Known Limitations
+
+- Validation focuses on a subset of JSON Schema behavior.
+- Top errors panel is capped at 50 rows for readability.
+- Invalid JSON files are skipped without detailed per-file parse messaging.
 
 ## License
 
