@@ -404,7 +404,14 @@ function validateBySchema(value, schema, path, errors, requiredFields) {
     if (!schema || typeof schema !== 'object') {
         return;
     }
-
+    // Try to parse stringified JSON if value is a string and schema expects array/object
+    if (typeof value === 'string' && (schema.type === 'array' || schema.type === 'object')) {
+        try {
+            value = JSON.parse(value);
+        } catch {
+            // If parsing fails, continue with the string value and let validation handle it
+        }
+    }
     if (schema.type === 'object') {
         if (!value || typeof value !== 'object' || Array.isArray(value)) {
             errors.push({ instancePath: path, message: 'must be object' });
