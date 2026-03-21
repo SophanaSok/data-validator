@@ -14,6 +14,7 @@ function initApp() {
         fileList: document.getElementById('fileList'),
         schema: document.getElementById('schema'),
         requiredFields: document.getElementById('requiredFields'),
+        manualRequiredFields: document.getElementById('manualRequiredFields'),
         progress: document.getElementById('progress'),
         progressBar: document.getElementById('progressBar'),
         results: document.getElementById('results')
@@ -164,22 +165,34 @@ function setSelectedFiles(files) {
 
 function updateSchema() {
     const requiredSelect = ui && ui.requiredFields;
+    const manualRequiredInput = ui && ui.manualRequiredFields;
     const schemaElement = ui && ui.schema;
 
     if (!requiredSelect || !schemaElement) {
         return;
     }
 
-    const selected = Array.from(requiredSelect.selectedOptions).map(o => o.value);
-    if (!selected.length) {
+    const selected = Array.from(requiredSelect.selectedOptions).map(o => o.value.trim()).filter(Boolean);
+    const manual = String((manualRequiredInput && manualRequiredInput.value) || '')
+        .split(/[\n,]+/)
+        .map(field => field.trim())
+        .filter(Boolean);
+
+    const requiredFields = Array.from(new Set([...selected, ...manual]));
+    if (!requiredFields.length) {
         alert('Select required fields');
         return;
     }
 
     const schema = JSON.parse(schemaElement.value);
-    schema.properties.Export.items.required = selected;
+    if (!schema.properties || !schema.properties.Export || !schema.properties.Export.items) {
+        alert('Schema must include properties.Export.items');
+        return;
+    }
+
+    schema.properties.Export.items.required = requiredFields;
     schemaElement.value = JSON.stringify(schema, null, 2);
-    alert(`✅ Set ${selected.length} required fields`);
+    alert(`✅ Set ${requiredFields.length} required fields`);
 }
 
 function unwrap(data) {

@@ -98,6 +98,12 @@ textarea {
     line-height: 1.5;
 }
 
+.manual-required-input {
+    height: 90px;
+    margin-top: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
 select[multiple] {
     height: 160px;
 }
