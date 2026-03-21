@@ -26,7 +26,7 @@
                 <option>BidURL</option><option>Description</option>
                 <option>PublishedDate</option><option>DueDate</option><option>AwardDate</option>
                 <option>Created</option><option>Modified</option><option>Refreshed</option>
-                <option>AgentName</option><option>Jurisdiction</option>
+              <option>AgentName</option><option>Jurisdiction</option><option value="BidDocuments">BidDocuments[]</option>
             </select>
               <label for="manualRequiredFields">Manual Required Fields <small>(comma or new line separated)</small></label>
               <textarea id="manualRequiredFields" class="manual-required-input" rows="3" placeholder="Example: ExternalID, RegionCode"></textarea>
@@ -50,7 +50,19 @@
           "BidURL": { "type": "string", "format": "uri" },
           "PublishedDate": { "type": "string", "format": "date-time" },
           "DueDate": { "type": "string", "format": "date-time" },
-          "AgentName": { "type": "string", "minLength": 1 }
+          "AgentName": { "type": "string", "minLength": 1 },
+          "BidDocuments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "Title": { "type": "string", "minLength": 1 },
+                "URL": { "type": "string", "minLength": 1 },
+                "Hash": { "type": "string", "minLength": 1 }
+              },
+              "required": ["Title", "URL", "Hash"]
+            }
+          }
         }
       }
     }

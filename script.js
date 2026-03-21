@@ -167,10 +167,12 @@ function updateSchema() {
         return;
     }
 
-    const selected = Array.from(requiredSelect.selectedOptions).map(o => o.value.trim()).filter(Boolean);
+    const selected = Array.from(requiredSelect.selectedOptions)
+        .map(o => normalizeRequiredFieldName(o.value))
+        .filter(Boolean);
     const manual = String((manualRequiredInput && manualRequiredInput.value) || '')
         .split(/[\n,]+/)
-        .map(field => field.trim())
+        .map(normalizeRequiredFieldName)
         .filter(Boolean);
 
     const requiredFields = Array.from(new Set([...selected, ...manual]));
@@ -271,7 +273,7 @@ async function validateFiles() {
                         index: idx,
                         field,
                         path: err.instancePath,
-                        value: getFieldValue(item, field),
+                        value: getFieldValueByPath(item, err.instancePath),
                         message: err.message
                     });
                 });
@@ -338,17 +340,37 @@ function getFieldFromPath(path) {
         return '(root)';
     }
 
-    return String(path).replace(/^\//, '') || '(root)';
+    const tokens = String(path).split('/').filter(Boolean);
+    if (!tokens.length) {
+        return '(root)';
+    }
+
+    return tokens.reduce((acc, token) => {
+        if (/^\d+$/.test(token)) {
+            return `${acc}[${token}]`;
+        }
+
+        return acc ? `${acc}.${token}` : token;
+    }, '');
 }
 
-function getFieldValue(item, field) {
-    if (field === '(root)') {
+function getFieldValueByPath(item, path) {
+    if (!path) {
         return item;
     }
 
-    return item && Object.prototype.hasOwnProperty.call(item, field)
-        ? item[field]
-        : undefined;
+    const tokens = String(path).split('/').filter(Boolean);
+    return tokens.reduce((current, token) => {
+        if (current === undefined || current === null) {
+            return undefined;
+        }
+
+        if (/^\d+$/.test(token)) {
+            return Array.isArray(current) ? current[Number(token)] : undefined;
+        }
+
+        return current[token];
+    }, item);
 }
 
 function formatFieldValue(value) {
@@ -371,72 +393,103 @@ function createItemValidator(schema) {
     return function validateItem(item) {
         const errors = [];
 
-        if (!item || typeof item !== 'object' || Array.isArray(item)) {
-            errors.push({ instancePath: '', message: 'must be object' });
-            validateItem.errors = errors;
-            return false;
-        }
-
-        const properties = (schema && schema.properties) || {};
-        const required = Array.isArray(schema && schema.required) ? schema.required : [];
-
-        required.forEach(field => {
-            if (item[field] === undefined || item[field] === null) {
-                errors.push({ instancePath: `/${field}`, message: "is required" });
-            }
-        });
-
-        Object.entries(properties).forEach(([field, rules]) => {
-            const value = item[field];
-            if (value === undefined || value === null) {
-                return;
-            }
-
-            const fieldPath = `/${field}`;
-
-            if (rules.type === 'string') {
-                if (typeof value !== 'string') {
-                    errors.push({ instancePath: fieldPath, message: 'must be string' });
-                    return;
-                }
-
-                if (typeof rules.minLength === 'number' && value.length < rules.minLength) {
-                    errors.push({ instancePath: fieldPath, message: `must NOT have fewer than ${rules.minLength} characters` });
-                }
-
-                if (rules.pattern) {
-                    if (!value.trim()) {
-                        errors.push({ instancePath: fieldPath, message: 'must have a non-empty value' });
-                    }
-                }
-
-                if (Array.isArray(rules.enum) && !rules.enum.includes(value)) {
-                    errors.push({ instancePath: fieldPath, message: `must be equal to one of the allowed values: ${rules.enum.join(', ')}` });
-                }
-
-                if (rules.format === 'uri') {
-                    try {
-                        const parsed = new URL(value);
-                        if (!parsed.protocol || !parsed.host) {
-                            errors.push({ instancePath: fieldPath, message: 'must match format "uri"' });
-                        }
-                    } catch {
-                        errors.push({ instancePath: fieldPath, message: 'must match format "uri"' });
-                    }
-                }
-
-                if (rules.format === 'date-time') {
-                    const date = new Date(value);
-                    if (Number.isNaN(date.getTime())) {
-                        errors.push({ instancePath: fieldPath, message: 'must match format "date-time"' });
-                    }
-                }
-            }
-        });
+        validateBySchema(item, schema, '', errors);
 
         validateItem.errors = errors;
         return errors.length === 0;
     };
+}
+
+function validateBySchema(value, schema, path, errors) {
+    if (!schema || typeof schema !== 'object') {
+        return;
+    }
+
+    if (schema.type === 'object') {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+            errors.push({ instancePath: path, message: 'must be object' });
+            return;
+        }
+
+        const required = Array.isArray(schema.required) ? schema.required : [];
+        required.forEach(field => {
+            const fieldValue = value[field];
+            if (fieldValue === undefined || fieldValue === null || (typeof fieldValue === 'string' && !fieldValue.trim())) {
+                errors.push({ instancePath: `${path}/${field}`, message: 'is required' });
+            }
+        });
+
+        const properties = schema.properties || {};
+        Object.entries(properties).forEach(([field, childSchema]) => {
+            if (value[field] === undefined || value[field] === null) {
+                return;
+            }
+
+            validateBySchema(value[field], childSchema, `${path}/${field}`, errors);
+        });
+
+        return;
+    }
+
+    if (schema.type === 'array') {
+        if (!Array.isArray(value)) {
+            errors.push({ instancePath: path, message: 'must be array' });
+            return;
+        }
+
+        if (typeof schema.minItems === 'number' && value.length < schema.minItems) {
+            errors.push({ instancePath: path, message: `must NOT have fewer than ${schema.minItems} items` });
+        }
+
+        if (schema.items) {
+            value.forEach((entry, index) => {
+                validateBySchema(entry, schema.items, `${path}/${index}`, errors);
+            });
+        }
+
+        return;
+    }
+
+    if (schema.type === 'string') {
+        if (typeof value !== 'string') {
+            errors.push({ instancePath: path, message: 'must be string' });
+            return;
+        }
+
+        if (typeof schema.minLength === 'number' && value.length < schema.minLength) {
+            errors.push({ instancePath: path, message: `must NOT have fewer than ${schema.minLength} characters` });
+        }
+
+        if (schema.pattern && !value.trim()) {
+            errors.push({ instancePath: path, message: 'must have a non-empty value' });
+        }
+
+        if (Array.isArray(schema.enum) && !schema.enum.includes(value)) {
+            errors.push({ instancePath: path, message: `must be equal to one of the allowed values: ${schema.enum.join(', ')}` });
+        }
+
+        if (schema.format === 'uri') {
+            try {
+                const parsed = new URL(value);
+                if (!parsed.protocol || !parsed.host) {
+                    errors.push({ instancePath: path, message: 'must match format "uri"' });
+                }
+            } catch {
+                errors.push({ instancePath: path, message: 'must match format "uri"' });
+            }
+        }
+
+        if (schema.format === 'date-time') {
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                errors.push({ instancePath: path, message: 'must match format "date-time"' });
+            }
+        }
+    }
+}
+
+function normalizeRequiredFieldName(field) {
+    return String(field || '').trim().replace(/\[\]$/, '');
 }
 
 function download(filename, content) {
