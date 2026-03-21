@@ -65,6 +65,29 @@ h1 {
     gap: 0.5rem;
 }
 
+.readme-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.readme-link:hover {
+    background: color-mix(in srgb, var(--card) 85%, var(--accent) 15%);
+}
+
+.readme-link:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
 .engine-badge {
     display: inline-flex;
     align-items: center;
