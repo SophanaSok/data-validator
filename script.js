@@ -1,6 +1,7 @@
 let selectedFiles = [];
 let ui = null;
 let lastValidationData = { good: [], bad: [], errors: [] };
+let topErrorsPreview = [];
 
 document.addEventListener('DOMContentLoaded', initApp);
 
@@ -89,6 +90,21 @@ function bindUIEvents() {
         });
     }
 
+    if (ui.results) {
+        ui.results.addEventListener('click', handleTopErrorRowClick);
+        ui.results.addEventListener('keydown', e => {
+            const row = e.target.closest('.error-row');
+            if (!row) {
+                return;
+            }
+
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                showErrorRecord(row.dataset.errorIndex);
+            }
+        });
+    }
+
     ['dragover', 'drop'].forEach(event => {
         document.addEventListener(event, e => {
             if (!ui.fileDrop || !ui.fileDrop.contains(e.target)) {
@@ -157,6 +173,38 @@ function setSelectedFiles(files) {
             : '📁 Drag lambda-*.json files or click to browse (multiple OK)';
     }
     renderSelectedFiles();
+}
+
+function handleTopErrorRowClick(e) {
+    const row = e.target.closest('.error-row');
+    if (!row) {
+        return;
+    }
+
+    showErrorRecord(row.dataset.errorIndex);
+}
+
+function showErrorRecord(indexValue) {
+    const index = Number(indexValue);
+    if (Number.isNaN(index) || !topErrorsPreview[index] || !ui || !ui.results) {
+        return;
+    }
+
+    const selected = topErrorsPreview[index];
+    const summary = ui.results.querySelector('#errorRecordSummary');
+    const content = ui.results.querySelector('#errorRecordContent');
+    const rows = ui.results.querySelectorAll('.error-row');
+
+    rows.forEach(row => {
+        row.classList.toggle('active', Number(row.dataset.errorIndex) === index);
+    });
+
+    if (!summary || !content) {
+        return;
+    }
+
+    summary.textContent = `${selected.file} | record ${selected.index} | ${selected.field} | ${selected.message}`;
+    content.textContent = JSON.stringify(selected.record, null, 2);
 }
 
 function updateSchema() {
@@ -275,7 +323,8 @@ async function validateFiles() {
                         field,
                         path: err.instancePath,
                         value: getFieldValueByPath(item, err.instancePath),
-                        message: err.message
+                        message: err.message,
+                        record: item
                     });
                 });
             }
@@ -293,6 +342,8 @@ async function validateFiles() {
 
     // Store data globally for download button access
     lastValidationData = { good: allGood, bad: allBad, errors: allErrors };
+
+    topErrorsPreview = allErrors.slice(0, 50);
 
     ui.results.innerHTML = `
         <div class="stats-grid">
@@ -322,12 +373,22 @@ async function validateFiles() {
         <div class="card">
             <h3>🔥 Top Errors</h3>
             <table>
-                <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
-                ${allErrors
-                    .slice(0, 50)
-                    .map(e => `<tr><td>${escapeHTML(e.file)}</td><td>${e.index}</td><td>${escapeHTML(e.field)}</td><td>${escapeHTML(formatFieldValue(e.value))}</td><td>${escapeHTML(e.message)}</td></tr>`)
+                <thead>
+                    <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
+                </thead>
+                <tbody>
+                ${topErrorsPreview
+                    .map((e, index) => `<tr class="error-row" data-error-index="${index}" tabindex="0" role="button" aria-label="View record ${e.index} from ${escapeHTML(e.file)}"><td>${escapeHTML(e.file)}</td><td>${e.index}</td><td>${escapeHTML(e.field)}</td><td>${escapeHTML(formatFieldValue(e.value))}</td><td>${escapeHTML(e.message)}</td></tr>`)
                     .join('')}
+                </tbody>
             </table>
+            <p class="error-row-hint">Click any error row to view the full JSON record.</p>
+        </div>
+
+        <div class="card">
+            <h3>🧾 Selected Error Record</h3>
+            <p id="errorRecordSummary">Select an error row above to inspect its full JSON payload.</p>
+            <pre id="errorRecordContent" class="record-viewer">No record selected.</pre>
         </div>
 
         <div class="card">
