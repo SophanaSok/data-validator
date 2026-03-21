@@ -287,6 +287,7 @@ table {
     border-collapse: collapse;
     margin: 1rem 0;
     font-size: 14px;
+    table-layout: auto;
 }
 
 thead th {
@@ -300,6 +301,9 @@ td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid var(--border);
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 200px;
 }
 
 th {
