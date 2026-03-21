@@ -1,14 +1,118 @@
-const ajv = new Ajv({ allErrors: true, verbose: true });
+let selectedFiles = [];
+let ajv = null;
+let ui = null;
+
+document.addEventListener('DOMContentLoaded', initApp);
+
+function initApp() {
+    ui = {
+        themeToggle: document.getElementById('themeToggle'),
+        applySchemaBtn: document.getElementById('applySchemaBtn'),
+        validateBtn: document.getElementById('validateBtn'),
+        fileDrop: document.getElementById('fileDrop'),
+        fileInput: document.getElementById('jsonFile'),
+        fileList: document.getElementById('fileList'),
+        schema: document.getElementById('schema'),
+        requiredFields: document.getElementById('requiredFields'),
+        progress: document.getElementById('progress'),
+        progressBar: document.getElementById('progressBar'),
+        results: document.getElementById('results')
+    };
+
+    if (typeof window.Ajv === 'function') {
+        ajv = new window.Ajv({ allErrors: true, verbose: true });
+    }
+
+    bindUIEvents();
+}
+
+function bindUIEvents() {
+    if (ui.themeToggle) {
+        ui.themeToggle.addEventListener('click', toggleTheme);
+    }
+
+    if (ui.applySchemaBtn) {
+        ui.applySchemaBtn.addEventListener('click', updateSchema);
+    }
+
+    if (ui.validateBtn) {
+        ui.validateBtn.addEventListener('click', validateFiles);
+    }
+
+    if (ui.fileDrop) {
+        ui.fileDrop.addEventListener('click', openFilePicker);
+        ui.fileDrop.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openFilePicker();
+            }
+        });
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
+            ui.fileDrop.addEventListener(event, e => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (event === 'dragenter' || event === 'dragover') {
+                    ui.fileDrop.classList.add('dragover');
+                } else {
+                    ui.fileDrop.classList.remove('dragover');
+                }
+
+                if (event === 'drop' && e.dataTransfer && e.dataTransfer.files) {
+                    setSelectedFiles(e.dataTransfer.files);
+                }
+            });
+        });
+    }
+
+    if (ui.fileInput) {
+        ui.fileInput.addEventListener('change', e => {
+            setSelectedFiles(e.target.files);
+        });
+    }
+
+    if (ui.fileList) {
+        ui.fileList.addEventListener('click', e => {
+            const button = e.target.closest('.file-remove');
+            if (!button) {
+                return;
+            }
+
+            const index = Number(button.dataset.index);
+            if (Number.isNaN(index)) {
+                return;
+            }
+
+            selectedFiles.splice(index, 1);
+            setSelectedFiles(selectedFiles);
+            if (ui.fileInput) {
+                ui.fileInput.value = '';
+            }
+        });
+    }
+
+    ['dragover', 'drop'].forEach(event => {
+        document.addEventListener(event, e => {
+            if (!ui.fileDrop || !ui.fileDrop.contains(e.target)) {
+                e.preventDefault();
+            }
+        });
+    });
+}
+
+function openFilePicker() {
+    if (ui && ui.fileInput) {
+        ui.fileInput.click();
+    }
+}
 
 function toggleTheme() {
     document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-    document.querySelector('.theme-toggle').textContent = document.body.dataset.theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+    if (ui && ui.themeToggle) {
+        ui.themeToggle.textContent = document.body.dataset.theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+    }
 }
-
-const fileDrop = document.getElementById('fileDrop');
-const fileInput = document.getElementById('jsonFile');
-const fileList = document.getElementById('fileList');
-let selectedFiles = [];
 
 function formatBytes(bytes) {
     if (!Number.isFinite(bytes) || bytes <= 0) {
@@ -22,109 +126,59 @@ function formatBytes(bytes) {
 }
 
 function renderSelectedFiles() {
-    if (!fileList) {
+    if (!ui || !ui.fileList) {
         return;
     }
 
-    fileList.innerHTML = selectedFiles
+    ui.fileList.innerHTML = selectedFiles
         .map((file, index) => `
             <div class="file-list-item">
                 <div class="file-meta">
-                    <span class="file-name">${file.name}</span>
+                    <span class="file-name">${escapeHTML(file.name)}</span>
                     <span class="file-size">${formatBytes(file.size)}</span>
                 </div>
-                <button type="button" class="file-remove" data-index="${index}" aria-label="Remove ${file.name}">Remove</button>
+                <button type="button" class="file-remove" data-index="${index}" aria-label="Remove ${escapeHTML(file.name)}">Remove</button>
             </div>
         `)
         .join('');
 }
 
+function escapeHTML(value) {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 function setSelectedFiles(files) {
     selectedFiles = Array.from(files || []);
-    if (fileDrop) {
-        fileDrop.textContent = selectedFiles.length
+    if (ui && ui.fileDrop) {
+        ui.fileDrop.textContent = selectedFiles.length
             ? `${selectedFiles.length} files loaded`
             : '📁 Drag lambda-*.json files or click to browse (multiple OK)';
     }
     renderSelectedFiles();
 }
 
-if (fileDrop) {
-    fileDrop.addEventListener('click', () => {
-        if (fileInput) {
-            fileInput.click();
-        }
-    });
-
-    fileDrop.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            if (fileInput) {
-                fileInput.click();
-            }
-        }
-    });
-
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
-        fileDrop.addEventListener(event, e => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            if (event === 'dragenter' || event === 'dragover') {
-                fileDrop.classList.add('dragover');
-            } else {
-                fileDrop.classList.remove('dragover');
-            }
-
-            if (event === 'drop') {
-                setSelectedFiles(e.dataTransfer.files);
-            }
-        });
-    });
-}
-
-if (fileInput) {
-    fileInput.addEventListener('change', e => {
-        setSelectedFiles(e.target.files);
-    });
-}
-
-['dragover', 'drop'].forEach(event => {
-    document.addEventListener(event, e => {
-        e.preventDefault();
-    });
-});
-
-if (fileList) {
-    fileList.addEventListener('click', e => {
-        const button = e.target.closest('.file-remove');
-        if (!button) {
-            return;
-        }
-
-        const index = Number(button.dataset.index);
-        if (Number.isNaN(index)) {
-            return;
-        }
-
-        selectedFiles.splice(index, 1);
-        setSelectedFiles(selectedFiles);
-        if (fileInput) {
-            fileInput.value = '';
-        }
-    });
-}
-
 function updateSchema() {
-    const selected = Array.from(document.getElementById('requiredFields').selectedOptions).map(o => o.value);
+    const requiredSelect = ui && ui.requiredFields;
+    const schemaElement = ui && ui.schema;
+
+    if (!requiredSelect || !schemaElement) {
+        return;
+    }
+
+    const selected = Array.from(requiredSelect.selectedOptions).map(o => o.value);
     if (!selected.length) {
         alert('Select required fields');
         return;
     }
 
-    const schema = JSON.parse(document.getElementById('schema').value);
+    const schema = JSON.parse(schemaElement.value);
     schema.properties.Export.items.required = selected;
-    document.getElementById('schema').value = JSON.stringify(schema, null, 2);
+    schemaElement.value = JSON.stringify(schema, null, 2);
     alert(`✅ Set ${selected.length} required fields`);
 }
 
@@ -142,11 +196,16 @@ function unwrap(data) {
 }
 
 async function validateFiles() {
-    const progress = document.getElementById('progress');
-    const progressBar = document.getElementById('progressBar');
-    const results = document.getElementById('results');
+    if (!ui || !ui.progress || !ui.progressBar || !ui.results || !ui.schema) {
+        return;
+    }
 
-    const schemaText = document.getElementById('schema').value;
+    if (!ajv) {
+        ui.results.innerHTML = '<div class="card"><h3>❌ Validator Not Available</h3><p>AJV failed to load. Check your network connection and reload the page.</p></div>';
+        return;
+    }
+
+    const schemaText = ui.schema.value;
     let schema;
 
     try {
@@ -156,14 +215,23 @@ async function validateFiles() {
         return;
     }
 
-    const files = selectedFiles.length ? selectedFiles : Array.from((fileInput && fileInput.files) || []);
+    const files = selectedFiles.length ? selectedFiles : Array.from((ui.fileInput && ui.fileInput.files) || []);
     if (!files.length) {
         alert('Load JSON files');
         return;
     }
 
-    progress.style.display = 'block';
-    results.innerHTML = '<p>🔄 Validating...</p>';
+    ui.progress.style.display = 'block';
+    ui.results.innerHTML = '<p>🔄 Validating...</p>';
+
+    const itemSchema = schema && schema.properties && schema.properties.Export && schema.properties.Export.items;
+    if (!itemSchema) {
+        ui.progress.style.display = 'none';
+        alert('Schema must include properties.Export.items');
+        return;
+    }
+
+    const validateItem = ajv.compile(itemSchema);
 
     let allGood = [];
     let allBad = [];
@@ -171,7 +239,7 @@ async function validateFiles() {
     let totalRecords = 0;
 
     for (let i = 0; i < files.length; i++) {
-        progressBar.style.width = `${((i + 1) / files.length) * 100}%`;
+        ui.progressBar.style.width = `${((i + 1) / files.length) * 100}%`;
         const file = files[i];
         const jsonText = await file.text();
         let data;
@@ -184,8 +252,6 @@ async function validateFiles() {
 
         const records = unwrap(data);
         totalRecords += records.length;
-
-        const validateItem = ajv.compile(schema.properties.Export.items);
         const good = [];
         const bad = [];
         const errors = [];
@@ -211,12 +277,12 @@ async function validateFiles() {
         allErrors.push(...errors);
     }
 
-    progress.style.display = 'none';
+    ui.progress.style.display = 'none';
 
     const passRate = totalRecords ? (allGood.length / totalRecords * 100).toFixed(1) : 0;
     const isPass = passRate >= 95;
 
-    results.innerHTML = `
+    ui.results.innerHTML = `
         <div class="stats-grid">
             <div class="stat ${isPass ? 'pass' : 'fail'}">
                 <h3>${passRate}%</h3>
@@ -282,7 +348,4 @@ function toCSV(errors) {
     return 'File,Record,Field,Error\n' + errors.map(e => `"${e.file}",${e.index},"${e.path}","${e.message}"`).join('\n');
 }
 
-window.toggleTheme = toggleTheme;
-window.updateSchema = updateSchema;
-window.validateFiles = validateFiles;
 window.download = download;

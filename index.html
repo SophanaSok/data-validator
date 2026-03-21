@@ -13,7 +13,7 @@
     <div class="container">
         <div class="header">
             <h1>🚫 Bid Data Validator</h1>
-            <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+          <button id="themeToggle" class="theme-toggle" type="button">🌙 Dark Mode</button>
         </div>
         
         <div class="card">
@@ -26,7 +26,7 @@
                 <option>Created</option><option>Modified</option><option>Refreshed</option>
                 <option>AgentName</option><option>Jurisdiction</option>
             </select>
-            <button onclick="updateSchema()">✅ Apply to Schema</button>
+            <button id="applySchemaBtn" type="button">✅ Apply to Schema</button>
         </div>
         
         <div class="card">
@@ -60,11 +60,11 @@
             <label id="fileDrop" class="file-drop" for="jsonFile" role="button" tabindex="0">
                 📁 Drag lambda-*.json files or click to browse (multiple OK)
             </label>
-            <input type="file" id="jsonFile" class="visually-hidden-file-input" accept=".json,application/json,text/json" multiple>
-          <div id="fileList" class="file-list" aria-live="polite"></div>
+            <input type="file" id="jsonFile" class="file-input" accept=".json,application/json,text/json" multiple>
+            <div id="fileList" class="file-list" aria-live="polite"></div>
         </div>
         
-        <button onclick="validateFiles()" style="width:100%; font-size:1.1rem;">🚀 Validate Batch</button>
+        <button id="validateBtn" type="button" style="width:100%; font-size:1.1rem;">🚀 Validate Batch</button>
         
         <div id="progress" class="progress" style="display:none;"><div id="progressBar" class="progress-bar"></div></div>
         <div id="results"></div>
