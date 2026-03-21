@@ -22,12 +22,11 @@
         <div class="card">
             <label>Select Required Fields <small>(Ctrl+Click multiple, then Apply)</small></label>
             <select id="requiredFields" multiple>
-                <option>ProjectCode</option><option>AgentID</option><option>LegacyAgentID</option>
-                <option>Title</option><option>BidStatus</option><option>BidType</option>
+                <option selected>AgentName</option><option selected>AgentID</option><option selected>LegacyAgentID</option><option selected>ResourceURL</option>
+                <option>ProjectCode</option><option>Title</option><option>BidStatus</option><option>BidType</option>
                 <option>BidURL</option><option>Description</option>
                 <option>PublishedDate</option><option>DueDate</option><option>AwardDate</option>
-                <option>ResourceURL</option>
-              <option>AgentName</option><option>Jurisdiction</option><option value="BidDocuments">BidDocuments[]</option>
+              <option>Jurisdiction</option><option value="BidDocuments">BidDocuments[]</option>
             </select>
               <label for="manualRequiredFields">Manual Required Fields <small>(comma or new line separated)</small></label>
               <textarea id="manualRequiredFields" class="manual-required-input" rows="3" placeholder="Example: ExternalID, RegionCode"></textarea>
