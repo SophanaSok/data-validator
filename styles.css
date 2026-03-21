@@ -78,12 +78,25 @@ h1 {
     letter-spacing: 0.01em;
 }
 
-.theme-toggle {
+button.theme-toggle {
     background: var(--card);
+    color: var(--text);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 8px 16px;
     cursor: pointer;
+    font-weight: 600;
+}
+
+button.theme-toggle:hover {
+    background: color-mix(in srgb, var(--card) 85%, var(--accent) 15%);
+    transform: none;
+}
+
+[data-theme="dark"] button.theme-toggle {
+    background: #334155;
+    border-color: #64748b;
+    color: #f8fafc;
 }
 
 .card {
