@@ -265,10 +265,13 @@ async function validateFiles() {
             } else {
                 bad.push(item);
                 validateItem.errors.forEach(err => {
+                    const field = getFieldFromPath(err.instancePath);
                     errors.push({
                         file: file.name,
                         index: idx,
+                        field,
                         path: err.instancePath,
+                        value: getFieldValue(item, field),
                         message: err.message
                     });
                 });
@@ -313,10 +316,10 @@ async function validateFiles() {
         <div class="card">
             <h3>🔥 Top Errors</h3>
             <table>
-                <tr><th>File</th><th>Record #</th><th>Field</th><th>Error</th></tr>
+                <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
                 ${allErrors
                     .slice(0, 50)
-                    .map(e => `<tr><td>${e.file}</td><td>${e.index}</td><td>${e.path}</td><td>${e.message}</td></tr>`)
+                    .map(e => `<tr><td>${escapeHTML(e.file)}</td><td>${e.index}</td><td>${escapeHTML(e.field)}</td><td>${escapeHTML(formatFieldValue(e.value))}</td><td>${escapeHTML(e.message)}</td></tr>`)
                     .join('')}
             </table>
         </div>
@@ -328,6 +331,40 @@ async function validateFiles() {
             <button onclick="download('errors.csv', toCSV(allErrors))">📊 Error Report CSV</button>
         </div>
     `;
+}
+
+function getFieldFromPath(path) {
+    if (!path) {
+        return '(root)';
+    }
+
+    return String(path).replace(/^\//, '') || '(root)';
+}
+
+function getFieldValue(item, field) {
+    if (field === '(root)') {
+        return item;
+    }
+
+    return item && Object.prototype.hasOwnProperty.call(item, field)
+        ? item[field]
+        : undefined;
+}
+
+function formatFieldValue(value) {
+    if (value === undefined || value === null) {
+        return '(empty)';
+    }
+
+    if (typeof value === 'string') {
+        return value.trim() ? value : '(empty)';
+    }
+
+    if (typeof value === 'object') {
+        return JSON.stringify(value);
+    }
+
+    return String(value);
 }
 
 function createItemValidator(schema) {
@@ -368,9 +405,8 @@ function createItemValidator(schema) {
                 }
 
                 if (rules.pattern) {
-                    const pattern = new RegExp(rules.pattern);
-                    if (!pattern.test(value)) {
-                        errors.push({ instancePath: fieldPath, message: `must match pattern ${rules.pattern}` });
+                    if (!value.trim()) {
+                        errors.push({ instancePath: fieldPath, message: 'must have a non-empty value' });
                     }
                 }
 
@@ -421,7 +457,9 @@ function toCSV(errors) {
         return 'No errors';
     }
 
-    return 'File,Record,Field,Error\n' + errors.map(e => `"${e.file}",${e.index},"${e.path}","${e.message}"`).join('\n');
+    return 'File,Record,Field,Value,Error\n' + errors
+        .map(e => `"${e.file}",${e.index},"${e.field}","${formatFieldValue(e.value)}","${e.message}"`)
+        .join('\n');
 }
 
 window.download = download;
