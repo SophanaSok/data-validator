@@ -1,5 +1,6 @@
 let selectedFiles = [];
 let ui = null;
+let lastValidationData = { good: [], bad: [], errors: [] };
 
 document.addEventListener('DOMContentLoaded', initApp);
 
@@ -290,6 +291,9 @@ async function validateFiles() {
     const passRate = totalRecords ? (allGood.length / totalRecords * 100).toFixed(1) : 0;
     const isPass = passRate >= 95;
 
+    // Store data globally for download button access
+    lastValidationData = { good: allGood, bad: allBad, errors: allErrors };
+
     ui.results.innerHTML = `
         <div class="stats-grid">
             <div class="stat ${isPass ? 'pass' : 'fail'}">
@@ -328,9 +332,9 @@ async function validateFiles() {
 
         <div class="card">
             <h3>⬇️ Downloads</h3>
-            <button class="success" onclick="download('good-bids.json', ${JSON.stringify(allGood)})">✅ Good Records JSON</button>
-            <button class="danger" onclick="download('bad-bids.json', ${JSON.stringify(allBad)})">❌ Bad Records JSON</button>
-            <button onclick="download('errors.csv', toCSV(allErrors))">📊 Error Report CSV</button>
+            <button class="success" onclick="download('good-bids.json', lastValidationData.good)">✅ Good Records JSON</button>
+            <button class="danger" onclick="download('bad-bids.json', lastValidationData.bad)">❌ Bad Records JSON</button>
+            <button onclick="download('errors.csv', toCSV(lastValidationData.errors))">📊 Error Report CSV</button>
         </div>
     `;
 }
@@ -532,3 +536,4 @@ function toCSV(errors) {
 }
 
 window.download = download;
+window.toCSV = toCSV;
