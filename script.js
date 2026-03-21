@@ -393,14 +393,14 @@ function createItemValidator(schema) {
     return function validateItem(item) {
         const errors = [];
 
-        validateBySchema(item, schema, '', errors);
+        validateBySchema(item, schema, '', errors, []);
 
         validateItem.errors = errors;
         return errors.length === 0;
     };
 }
 
-function validateBySchema(value, schema, path, errors) {
+function validateBySchema(value, schema, path, errors, requiredFields) {
     if (!schema || typeof schema !== 'object') {
         return;
     }
@@ -425,7 +425,8 @@ function validateBySchema(value, schema, path, errors) {
                 return;
             }
 
-            validateBySchema(value[field], childSchema, `${path}/${field}`, errors);
+            const fieldIsRequired = required.includes(field);
+            validateBySchema(value[field], childSchema, `${path}/${field}`, errors, fieldIsRequired ? required : []);
         });
 
         return;
@@ -443,7 +444,7 @@ function validateBySchema(value, schema, path, errors) {
 
         if (schema.items) {
             value.forEach((entry, index) => {
-                validateBySchema(entry, schema.items, `${path}/${index}`, errors);
+                validateBySchema(entry, schema.items, `${path}/${index}`, errors, []);
             });
         }
 
@@ -464,25 +465,28 @@ function validateBySchema(value, schema, path, errors) {
             errors.push({ instancePath: path, message: 'must have a non-empty value' });
         }
 
-        if (Array.isArray(schema.enum) && !schema.enum.includes(value)) {
-            errors.push({ instancePath: path, message: `must be equal to one of the allowed values: ${schema.enum.join(', ')}` });
-        }
+        const isRequired = Array.isArray(requiredFields) && requiredFields.length > 0;
+        if (isRequired) {
+            if (Array.isArray(schema.enum) && !schema.enum.includes(value)) {
+                errors.push({ instancePath: path, message: `must be equal to one of the allowed values: ${schema.enum.join(', ')}` });
+            }
 
-        if (schema.format === 'uri') {
-            try {
-                const parsed = new URL(value);
-                if (!parsed.protocol || !parsed.host) {
+            if (schema.format === 'uri') {
+                try {
+                    const parsed = new URL(value);
+                    if (!parsed.protocol || !parsed.host) {
+                        errors.push({ instancePath: path, message: 'must match format "uri"' });
+                    }
+                } catch {
                     errors.push({ instancePath: path, message: 'must match format "uri"' });
                 }
-            } catch {
-                errors.push({ instancePath: path, message: 'must match format "uri"' });
             }
-        }
 
-        if (schema.format === 'date-time') {
-            const date = new Date(value);
-            if (Number.isNaN(date.getTime())) {
-                errors.push({ instancePath: path, message: 'must match format "date-time"' });
+            if (schema.format === 'date-time') {
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) {
+                    errors.push({ instancePath: path, message: 'must match format "date-time"' });
+                }
             }
         }
     }

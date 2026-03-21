@@ -46,7 +46,7 @@
           "ProjectCode": { "type": "string", "pattern": "^SRC\\d+$" },
           "AgentID": { "type": "string", "minLength": 1 },
           "Title": { "type": "string", "minLength": 5 },
-          "BidStatus": { "type": "string", "enum": ["Active", "Awarded", "Closed", "Cancelled"] },
+          "BidStatus": { "type": "string" },
           "BidURL": { "type": "string", "format": "uri" },
           "PublishedDate": { "type": "string", "format": "date-time" },
           "DueDate": { "type": "string", "format": "date-time" },
