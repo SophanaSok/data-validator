@@ -7,6 +7,10 @@
     --success: #10b981;
     --border: #e2e8f0;
     --shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }
 
 [data-theme="dark"] {
@@ -27,7 +31,10 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background: var(--bg);
+    background:
+        radial-gradient(circle at 8% 0%, rgba(59, 130, 246, 0.1), transparent 35%),
+        radial-gradient(circle at 92% 100%, rgba(16, 185, 129, 0.08), transparent 38%),
+        var(--bg);
     color: var(--text);
     line-height: 1.6;
     padding: 2rem;
@@ -55,17 +62,17 @@ h1 {
 .theme-toggle {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     padding: 8px 16px;
     cursor: pointer;
 }
 
 .card {
     background: var(--card);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     padding: 1.5rem;
     margin-bottom: 1.5rem;
-    box-shadow: var(--shadow);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
     border: 1px solid var(--border);
 }
 
@@ -80,14 +87,15 @@ select {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     font-family: monospace;
-    font-size: 14px;
+    font-size: 15px;
 }
 
 textarea {
     height: 200px;
     resize: vertical;
+    line-height: 1.5;
 }
 
 select[multiple] {
@@ -96,7 +104,7 @@ select[multiple] {
 
 .file-drop {
     border: 2px dashed var(--border);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     padding: 2rem;
     text-align: center;
     cursor: pointer;
@@ -105,13 +113,14 @@ select[multiple] {
 
 .file-drop.dragover {
     border-color: var(--accent);
-    background: rgba(59, 130, 246, 0.05);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    background: rgba(59, 130, 246, 0.08);
 }
 
 .file-list {
     margin-top: 0.75rem;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     max-height: 180px;
     overflow: auto;
     background: var(--bg);
@@ -156,11 +165,12 @@ select[multiple] {
 .file-remove {
     margin: 0;
     padding: 6px 10px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     background: transparent;
     color: var(--danger);
     border: 1px solid var(--danger);
     font-size: 0.8rem;
+    width: auto;
 }
 
 .file-remove:hover {
@@ -177,7 +187,7 @@ button {
     color: white;
     border: none;
     padding: 12px 24px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
@@ -203,6 +213,16 @@ button.success {
 
 button.success:hover {
     background: #059669;
+}
+
+button:focus-visible,
+.theme-toggle:focus-visible,
+.file-drop:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.file-remove:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
 }
 
 .stats-grid {
@@ -237,6 +257,12 @@ table {
     font-size: 14px;
 }
 
+thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
 th,
 td {
     padding: 12px;
@@ -251,6 +277,10 @@ th {
 
 tr:hover {
     background: rgba(59, 130, 246, 0.05);
+}
+
+tbody tr:nth-child(even) {
+    background: rgba(148, 163, 184, 0.08);
 }
 
 .progress {
@@ -274,5 +304,25 @@ tr:hover {
 
     h1 {
         font-size: 1.5rem;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    .file-remove {
+        width: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
     }
 }
