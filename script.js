@@ -7,6 +7,14 @@ function toggleTheme() {
 
 const fileDrop = document.getElementById('fileDrop');
 const fileInput = document.getElementById('jsonFile');
+let selectedFiles = [];
+
+function setSelectedFiles(files) {
+    selectedFiles = Array.from(files || []);
+    fileDrop.textContent = selectedFiles.length
+        ? `${selectedFiles.length} files loaded`
+        : '📁 Drag lambda-*.json files or click to browse (multiple OK)';
+}
 
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
     fileDrop.addEventListener(event, e => {
@@ -20,9 +28,18 @@ const fileInput = document.getElementById('jsonFile');
         }
 
         if (event === 'drop') {
-            fileInput.files = e.dataTransfer.files;
-            fileDrop.textContent = `${e.dataTransfer.files.length} files loaded`;
+            setSelectedFiles(e.dataTransfer.files);
         }
+    });
+});
+
+fileInput.addEventListener('change', e => {
+    setSelectedFiles(e.target.files);
+});
+
+['dragover', 'drop'].forEach(event => {
+    document.addEventListener(event, e => {
+        e.preventDefault();
     });
 });
 
@@ -67,7 +84,7 @@ async function validateFiles() {
         return;
     }
 
-    const files = fileInput.files;
+    const files = selectedFiles;
     if (!files.length) {
         alert('Load JSON files');
         return;
