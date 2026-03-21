@@ -23,6 +23,20 @@
             }
         }
 
+        [data-theme="light"] {
+            --page-bg: #f6f8fa;
+            --page-text: #1f2328;
+            --card-bg: #ffffff;
+            --border: #d0d7de;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #0d1117;
+            --page-text: #e6edf3;
+            --card-bg: #0d1117;
+            --border: #30363d;
+        }
+
         body {
             margin: 0;
             background: var(--page-bg);
@@ -53,6 +67,27 @@
             text-decoration: underline;
         }
 
+        .theme-toggle {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--page-text);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: color-mix(in srgb, var(--card-bg) 85%, #0969da 15%);
+        }
+
+        .theme-toggle:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+        }
+
         .markdown-body {
             box-sizing: border-box;
             max-width: 980px;
@@ -68,10 +103,8 @@
             color: #656d76;
         }
 
-        @media (prefers-color-scheme: dark) {
-            .status {
-                color: #8b949e;
-            }
+        [data-theme="dark"] .status {
+            color: #8b949e;
         }
 
         @media (max-width: 767px) {
@@ -85,6 +118,7 @@
 <body>
     <header class="topbar">
         <a href="index.html">Back to Validator</a>
+        <button id="themeToggle" class="theme-toggle" type="button">🌙 Dark Mode</button>
         <span class="status" id="status">Loading README...</span>
     </header>
 
@@ -92,6 +126,32 @@
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
+        function initTheme() {
+            const themeToggle = document.getElementById('themeToggle');
+            const stored = localStorage.getItem('readme-theme');
+            const isDark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+            if (themeToggle) {
+                themeToggle.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+                themeToggle.addEventListener('click', toggleTheme);
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.dataset.theme === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            
+            html.dataset.theme = newTheme;
+            localStorage.setItem('readme-theme', newTheme);
+            
+            const toggleBtn = document.getElementById('themeToggle');
+            if (toggleBtn) {
+                toggleBtn.textContent = isDark ? '🌙 Dark Mode' : '☀️ Light Mode';
+            }
+        }
+
         async function loadReadme() {
             const status = document.getElementById('status');
             const content = document.getElementById('content');
@@ -111,6 +171,7 @@
             }
         }
 
+        initTheme();
         loadReadme();
     </script>
 </body>
