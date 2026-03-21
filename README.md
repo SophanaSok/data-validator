@@ -191,7 +191,7 @@ The app will load directly in your browser—no installation required.
 
 1. Select `ProjectCode`, `BidURL`, `PublishedDate`, and `ResourceURL`.
 2. Click **Apply to Schema**.
-3. Upload one or more lambda output files.
+3. Upload one or more `.json` files.
 4. Click **Validate Batch**.
 5. Open a top error row and inspect the full record.
 6. Fix data upstream and rerun validation.
@@ -200,6 +200,7 @@ The app will load directly in your browser—no installation required.
 ## UI Guide
 
 - **Theme Toggle**: switches between light and dark mode.
+- **User Guide Link**: opens the GitHub-style README viewer page.
 - **Validation Engine Badge**: currently indicates local validation.
 - **Results Panel**: regenerated on each validation run.
 - **Top Errors Table**:
@@ -276,12 +277,14 @@ Fix:
 - `index.html`: App layout, controls, and default schema.
 - `styles.css`: Theme and component styling.
 - `script.js`: State, validation flow, and rendering logic.
+- `readme.html`: GitHub-style README viewer with theme toggle.
 - `README.md`: Documentation and user guide.
 
 ## Development Notes
 
 - No build step is required.
 - No external runtime dependency is required for validation logic.
+- `readme.html` uses CDN-hosted `marked` and `github-markdown-css` for README rendering.
 - SortableJS is loaded in `index.html` but currently not used by app behavior.
 
 ## Known Limitations
