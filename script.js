@@ -1,5 +1,4 @@
 let selectedFiles = [];
-let ajv = null;
 let ui = null;
 
 document.addEventListener('DOMContentLoaded', initApp);
@@ -19,10 +18,6 @@ function initApp() {
         progressBar: document.getElementById('progressBar'),
         results: document.getElementById('results')
     };
-
-    if (typeof window.Ajv === 'function') {
-        ajv = new window.Ajv({ allErrors: true, verbose: true });
-    }
 
     bindUIEvents();
 }
@@ -213,11 +208,6 @@ async function validateFiles() {
         return;
     }
 
-    if (!ajv) {
-        ui.results.innerHTML = '<div class="card"><h3>❌ Validator Not Available</h3><p>AJV failed to load. Check your network connection and reload the page.</p></div>';
-        return;
-    }
-
     const schemaText = ui.schema.value;
     let schema;
 
@@ -244,7 +234,7 @@ async function validateFiles() {
         return;
     }
 
-    const validateItem = ajv.compile(itemSchema);
+    const validateItem = createItemValidator(itemSchema);
 
     let allGood = [];
     let allBad = [];
@@ -338,6 +328,79 @@ async function validateFiles() {
             <button onclick="download('errors.csv', toCSV(allErrors))">📊 Error Report CSV</button>
         </div>
     `;
+}
+
+function createItemValidator(schema) {
+    return function validateItem(item) {
+        const errors = [];
+
+        if (!item || typeof item !== 'object' || Array.isArray(item)) {
+            errors.push({ instancePath: '', message: 'must be object' });
+            validateItem.errors = errors;
+            return false;
+        }
+
+        const properties = (schema && schema.properties) || {};
+        const required = Array.isArray(schema && schema.required) ? schema.required : [];
+
+        required.forEach(field => {
+            if (item[field] === undefined || item[field] === null) {
+                errors.push({ instancePath: `/${field}`, message: "is required" });
+            }
+        });
+
+        Object.entries(properties).forEach(([field, rules]) => {
+            const value = item[field];
+            if (value === undefined || value === null) {
+                return;
+            }
+
+            const fieldPath = `/${field}`;
+
+            if (rules.type === 'string') {
+                if (typeof value !== 'string') {
+                    errors.push({ instancePath: fieldPath, message: 'must be string' });
+                    return;
+                }
+
+                if (typeof rules.minLength === 'number' && value.length < rules.minLength) {
+                    errors.push({ instancePath: fieldPath, message: `must NOT have fewer than ${rules.minLength} characters` });
+                }
+
+                if (rules.pattern) {
+                    const pattern = new RegExp(rules.pattern);
+                    if (!pattern.test(value)) {
+                        errors.push({ instancePath: fieldPath, message: `must match pattern ${rules.pattern}` });
+                    }
+                }
+
+                if (Array.isArray(rules.enum) && !rules.enum.includes(value)) {
+                    errors.push({ instancePath: fieldPath, message: `must be equal to one of the allowed values: ${rules.enum.join(', ')}` });
+                }
+
+                if (rules.format === 'uri') {
+                    try {
+                        const parsed = new URL(value);
+                        if (!parsed.protocol || !parsed.host) {
+                            errors.push({ instancePath: fieldPath, message: 'must match format "uri"' });
+                        }
+                    } catch {
+                        errors.push({ instancePath: fieldPath, message: 'must match format "uri"' });
+                    }
+                }
+
+                if (rules.format === 'date-time') {
+                    const date = new Date(value);
+                    if (Number.isNaN(date.getTime())) {
+                        errors.push({ instancePath: fieldPath, message: 'must match format "date-time"' });
+                    }
+                }
+            }
+        });
+
+        validateItem.errors = errors;
+        return errors.length === 0;
+    };
 }
 
 function download(filename, content) {
