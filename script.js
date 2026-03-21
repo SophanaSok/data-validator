@@ -7,13 +7,25 @@ function toggleTheme() {
 
 const fileDrop = document.getElementById('fileDrop');
 const fileInput = document.getElementById('jsonFile');
+const fileList = document.getElementById('fileList');
 let selectedFiles = [];
+
+function renderSelectedFiles() {
+    if (!fileList) {
+        return;
+    }
+
+    fileList.innerHTML = selectedFiles
+        .map(file => `<div class="file-list-item">${file.name}</div>`)
+        .join('');
+}
 
 function setSelectedFiles(files) {
     selectedFiles = Array.from(files || []);
     fileDrop.textContent = selectedFiles.length
         ? `${selectedFiles.length} files loaded`
         : '📁 Drag lambda-*.json files or click to browse (multiple OK)';
+    renderSelectedFiles();
 }
 
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {

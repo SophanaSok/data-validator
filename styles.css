@@ -108,6 +108,29 @@ select[multiple] {
     background: rgba(59, 130, 246, 0.05);
 }
 
+.file-list {
+    margin-top: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    max-height: 180px;
+    overflow: auto;
+    background: var(--bg);
+}
+
+.file-list:empty {
+    display: none;
+}
+
+.file-list-item {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+.file-list-item:last-child {
+    border-bottom: none;
+}
+
 input[type=file] {
     display: none;
 }
