@@ -57,10 +57,10 @@
         
         <div class="card">
             <label>Drop Scraped JSON Files Here</label>
-            <div id="fileDrop" class="file-drop" onclick="document.getElementById('jsonFile').click()">
+            <label id="fileDrop" class="file-drop" for="jsonFile" role="button" tabindex="0">
                 📁 Drag lambda-*.json files or click to browse (multiple OK)
-            </div>
-            <input type="file" id="jsonFile" accept=".json" multiple>
+            </label>
+            <input type="file" id="jsonFile" class="visually-hidden-file-input" accept=".json,application/json,text/json" multiple>
           <div id="fileList" class="file-list" aria-live="polite"></div>
         </div>
         

@@ -50,6 +50,21 @@ function setSelectedFiles(files) {
 }
 
 if (fileDrop) {
+    fileDrop.addEventListener('click', () => {
+        if (fileInput) {
+            fileInput.click();
+        }
+    });
+
+    fileDrop.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+    });
+
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
         fileDrop.addEventListener(event, e => {
             e.preventDefault();
