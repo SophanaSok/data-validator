@@ -140,18 +140,15 @@ Important behavior details:
 
 ## How To Use The App
 
-### 1. Start the app
+### 1. Access the app via GitHub Pages
 
-Option A: Open directly
-- Open `index.html` in your browser.
+The app is hosted on GitHub Pages. Open:
 
-Option B: Serve locally (recommended)
-
-```bash
-python3 -m http.server 8000
+```
+https://SophanaSok.github.io/data-validator
 ```
 
-Then open `http://localhost:8000`.
+The app will load directly in your browser—no installation required.
 
 ### 2. Choose required fields
 
