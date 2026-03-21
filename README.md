@@ -12,7 +12,7 @@ This app lets you:
 
 ## Quick 60-Second Start
 
-1. Open `index.html` in your browser, or run `python3 -m http.server 8000` and open `http://localhost:8000`.
+1. Open the app at `https://SophanaSok.github.io/data-validator`.
 2. In **Select Required Fields**, choose at least one field and click **Apply to Schema**.
 3. Drag one or more JSON files into the drop zone.
 4. Click **Validate Batch**.
