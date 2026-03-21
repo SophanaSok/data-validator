@@ -10,13 +10,32 @@ const fileInput = document.getElementById('jsonFile');
 const fileList = document.getElementById('fileList');
 let selectedFiles = [];
 
+function formatBytes(bytes) {
+    if (!Number.isFinite(bytes) || bytes <= 0) {
+        return '0 B';
+    }
+
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    const value = bytes / 1024 ** exponent;
+    return `${value.toFixed(exponent === 0 ? 0 : 1)} ${units[exponent]}`;
+}
+
 function renderSelectedFiles() {
     if (!fileList) {
         return;
     }
 
     fileList.innerHTML = selectedFiles
-        .map(file => `<div class="file-list-item">${file.name}</div>`)
+        .map((file, index) => `
+            <div class="file-list-item">
+                <div class="file-meta">
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">${formatBytes(file.size)}</span>
+                </div>
+                <button type="button" class="file-remove" data-index="${index}" aria-label="Remove ${file.name}">Remove</button>
+            </div>
+        `)
         .join('');
 }
 
@@ -53,6 +72,22 @@ fileInput.addEventListener('change', e => {
     document.addEventListener(event, e => {
         e.preventDefault();
     });
+});
+
+fileList.addEventListener('click', e => {
+    const button = e.target.closest('.file-remove');
+    if (!button) {
+        return;
+    }
+
+    const index = Number(button.dataset.index);
+    if (Number.isNaN(index)) {
+        return;
+    }
+
+    selectedFiles.splice(index, 1);
+    setSelectedFiles(selectedFiles);
+    fileInput.value = '';
 });
 
 function updateSchema() {

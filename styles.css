@@ -122,6 +122,10 @@ select[multiple] {
 }
 
 .file-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
     padding: 0.5rem 0.75rem;
     border-bottom: 1px solid var(--border);
     font-size: 0.9rem;
@@ -129,6 +133,39 @@ select[multiple] {
 
 .file-list-item:last-child {
     border-bottom: none;
+}
+
+.file-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.file-name {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-size {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.file-remove {
+    margin: 0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    font-size: 0.8rem;
+}
+
+.file-remove:hover {
+    background: rgba(239, 68, 68, 0.1);
+    transform: none;
 }
 
 input[type=file] {
