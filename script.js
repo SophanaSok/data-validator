@@ -41,32 +41,38 @@ function renderSelectedFiles() {
 
 function setSelectedFiles(files) {
     selectedFiles = Array.from(files || []);
-    fileDrop.textContent = selectedFiles.length
-        ? `${selectedFiles.length} files loaded`
-        : '📁 Drag lambda-*.json files or click to browse (multiple OK)';
+    if (fileDrop) {
+        fileDrop.textContent = selectedFiles.length
+            ? `${selectedFiles.length} files loaded`
+            : '📁 Drag lambda-*.json files or click to browse (multiple OK)';
+    }
     renderSelectedFiles();
 }
 
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
-    fileDrop.addEventListener(event, e => {
-        e.preventDefault();
-        e.stopPropagation();
+if (fileDrop) {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
+        fileDrop.addEventListener(event, e => {
+            e.preventDefault();
+            e.stopPropagation();
 
-        if (event === 'dragenter' || event === 'dragover') {
-            fileDrop.classList.add('dragover');
-        } else {
-            fileDrop.classList.remove('dragover');
-        }
+            if (event === 'dragenter' || event === 'dragover') {
+                fileDrop.classList.add('dragover');
+            } else {
+                fileDrop.classList.remove('dragover');
+            }
 
-        if (event === 'drop') {
-            setSelectedFiles(e.dataTransfer.files);
-        }
+            if (event === 'drop') {
+                setSelectedFiles(e.dataTransfer.files);
+            }
+        });
     });
-});
+}
 
-fileInput.addEventListener('change', e => {
-    setSelectedFiles(e.target.files);
-});
+if (fileInput) {
+    fileInput.addEventListener('change', e => {
+        setSelectedFiles(e.target.files);
+    });
+}
 
 ['dragover', 'drop'].forEach(event => {
     document.addEventListener(event, e => {
@@ -74,21 +80,25 @@ fileInput.addEventListener('change', e => {
     });
 });
 
-fileList.addEventListener('click', e => {
-    const button = e.target.closest('.file-remove');
-    if (!button) {
-        return;
-    }
+if (fileList) {
+    fileList.addEventListener('click', e => {
+        const button = e.target.closest('.file-remove');
+        if (!button) {
+            return;
+        }
 
-    const index = Number(button.dataset.index);
-    if (Number.isNaN(index)) {
-        return;
-    }
+        const index = Number(button.dataset.index);
+        if (Number.isNaN(index)) {
+            return;
+        }
 
-    selectedFiles.splice(index, 1);
-    setSelectedFiles(selectedFiles);
-    fileInput.value = '';
-});
+        selectedFiles.splice(index, 1);
+        setSelectedFiles(selectedFiles);
+        if (fileInput) {
+            fileInput.value = '';
+        }
+    });
+}
 
 function updateSchema() {
     const selected = Array.from(document.getElementById('requiredFields').selectedOptions).map(o => o.value);
@@ -131,7 +141,7 @@ async function validateFiles() {
         return;
     }
 
-    const files = selectedFiles;
+    const files = selectedFiles.length ? selectedFiles : Array.from((fileInput && fileInput.files) || []);
     if (!files.length) {
         alert('Load JSON files');
         return;
