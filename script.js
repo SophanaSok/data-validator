@@ -414,7 +414,12 @@ function validateBySchema(value, schema, path, errors, requiredFields) {
         const required = Array.isArray(schema.required) ? schema.required : [];
         required.forEach(field => {
             const fieldValue = value[field];
-            if (fieldValue === undefined || fieldValue === null || (typeof fieldValue === 'string' && !fieldValue.trim())) {
+            const isEmpty = fieldValue === undefined || 
+                           fieldValue === null ||
+                           (typeof fieldValue === 'string' && !fieldValue.trim()) ||
+                           (Array.isArray(fieldValue) && fieldValue.length === 0);
+            
+            if (isEmpty) {
                 errors.push({ instancePath: `${path}/${field}`, message: 'is required' });
             }
         });
