@@ -13,7 +13,7 @@ This app lets you:
 ## Quick 60-Second Start
 
 1. Open the app at `https://SophanaSok.github.io/data-validator`.
-2. In **Select Required Fields**, choose at least one field and click **Apply to Schema**.
+2. The **Select Required Fields** list comes preselected with `AgentName`, `AgentID`, `LegacyAgentID`, and `ResourceURL`. Adjust if needed and click **Apply to Schema**.
 3. Drag one or more JSON files into the drop zone.
 4. Click **Validate Batch**.
 5. Review pass rate and gate status.
@@ -61,27 +61,33 @@ High-level flow:
 
 ## Required Fields Selector
 
-The built-in required-field options currently include:
-- `ProjectCode`
+The built-in required-field options include:
+
+**Preselected by default (always at top):**
+- `AgentName`
 - `AgentID`
 - `LegacyAgentID`
-- `Title`
+- `ResourceURL`
+
+**Additional fields (sorted alphabetically):**
+- `AwardDate`
+- `BidDocuments[]`
 - `BidStatus`
 - `BidType`
 - `BidURL`
 - `Description`
-- `PublishedDate`
 - `DueDate`
-- `AwardDate`
-- `ResourceURL`
-- `AgentName`
 - `Jurisdiction`
-- `BidDocuments[]`
+- `ProjectCode`
+- `PublishedDate`
+- `Title`
 
 Notes:
+- The four fields listed above are selected by default when the app loads.
 - `BidDocuments[]` is normalized to `BidDocuments` when applied.
 - Manual required fields are merged with selected fields.
 - Duplicate field names are removed automatically.
+- You can deselect any field using `Ctrl+Click` / `Cmd+Click` before applying to schema.
 
 ## Input JSON Shapes Supported
 
@@ -152,10 +158,11 @@ The app will load directly in your browser—no installation required.
 
 ### 2. Choose required fields
 
-1. In **Select Required Fields**, multi-select fields.
-2. Optionally add more names in **Manual Required Fields**.
-3. Click **Apply to Schema**.
-4. Confirm the success message with the count of required fields applied.
+1. The following four fields are **preselected by default**: `AgentName`, `AgentID`, `LegacyAgentID`, and `ResourceURL`.
+2. Adjust the selection as needed using multi-select (`Ctrl+Click` / `Cmd+Click`).
+3. Optionally add more names in **Manual Required Fields**.
+4. Click **Apply to Schema**.
+5. Confirm the success message with the count of required fields applied.
 
 ### 3. Review schema
 
