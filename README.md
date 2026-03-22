@@ -38,11 +38,12 @@ No installation is required.
 ### 2. Choose required fields
 
 1. The following four fields are **preselected by default**: `AgentName`, `AgentID`, `LegacyAgentID`, and `ResourceURL`.
-2. Adjust the selection with normal clicks: click once to select, click again to deselect (no modifier keys required).
-3. Watch the live `Selected: X fields` indicator under the selector as you choose fields.
-4. Optionally add more names in **Manual Required Fields**.
-5. Click **Apply to Schema**.
-6. Confirm the success message showing how many required fields were applied.
+2. **Quickly select all fields**: Click the **Select All** button next to the label to toggle between selecting all available fields and clearing all selections.
+3. Adjust the selection with normal clicks: click once to select, click again to deselect (no modifier keys required). Selecting fields will **not** jump the scroll position to the top.
+4. Watch the live `Selected: field1, field2, field3...` indicator under the selector as you choose fields. It displays the actual names of all selected fields in real time.
+5. Optionally add more names in **Manual Required Fields**.
+6. Click **Apply to Schema**.
+7. Confirm the success message showing how many required fields were applied.
 
 ### 3. Review schema
 
