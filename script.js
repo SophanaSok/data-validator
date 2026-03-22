@@ -170,7 +170,7 @@ function setSelectedFiles(files) {
     if (ui && ui.fileDrop) {
         ui.fileDrop.textContent = selectedFiles.length
             ? `${selectedFiles.length} files loaded`
-            : '📁 Drag lambda-*.json files or click to browse (multiple OK)';
+            : '📁 Drag .json files or click to browse (multiple OK)';
     }
     renderSelectedFiles();
 }
