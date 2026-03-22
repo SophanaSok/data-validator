@@ -34,6 +34,10 @@ function bindUIEvents() {
         ui.applySchemaBtn.addEventListener('click', updateSchema);
     }
 
+    if (ui.requiredFields) {
+        enableOptionClickToggle(ui.requiredFields);
+    }
+
     if (ui.validateBtn) {
         ui.validateBtn.addEventListener('click', validateFiles);
     }
@@ -113,6 +117,19 @@ function bindUIEvents() {
                 e.preventDefault();
             }
         });
+    });
+}
+
+function enableOptionClickToggle(selectElement) {
+    selectElement.addEventListener('mousedown', e => {
+        const option = e.target.closest('option');
+        if (!option) {
+            return;
+        }
+
+        // Prevent the browser's default selection handling so each click toggles one option.
+        e.preventDefault();
+        option.selected = !option.selected;
     });
 }
 
