@@ -147,12 +147,14 @@ function enableOptionClickToggle(selectElement) {
         // Prevent the browser's default selection handling so each click toggles one option.
         e.preventDefault();
         option.selected = !option.selected;
-        updateRequiredSelectionCount(selectElement);
         
-        // Restore scroll position before the next paint.
+        // Restore scroll immediately and again after layout calculations.
+        selectElement.scrollTop = scrollTop;
         requestAnimationFrame(() => {
             selectElement.scrollTop = scrollTop;
         });
+        
+        updateRequiredSelectionCount(selectElement);
     });
 }
 
