@@ -168,7 +168,21 @@ The app will load directly in your browser—no installation required.
 
 - Verify schema JSON in the editor.
 - Make additional edits if needed.
-- Ensure `properties.Export.items` exists, otherwise validation cannot run.
+- Think of the schema like a set of nested folders the validator must open in order:
+  `properties` -> `Export` -> `items`.
+- If any one of those is missing, the app does not know where the "rules for each bid record" are stored, so validation cannot start.
+- In plain terms: this is the exact location where the app expects the checklist for each bid.
+- Minimum shape the schema must have:
+
+```json
+{
+  "properties": {
+    "Export": {
+      "items": {}
+    }
+  }
+}
+```
 
 ### 4. Load files
 
