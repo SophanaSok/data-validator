@@ -78,8 +78,15 @@ The app will load directly in your browser—no installation required.
 
 1. In **Top Errors**, click any row.
 2. The page auto-scrolls to **Selected Error Record**.
-3. View the full JSON payload for the selected row.
+3. The JSON key causing the validation error is highlighted in the record viewer.
 4. Use this to debug exactly what failed in context.
+
+### 6.2 Understand key highlighting
+
+1. In **Selected Error Record**, look for the legend text: **Highlighted key = field causing the validation error**.
+2. Highlighting follows the error path, including nested keys.
+3. For missing required fields, no key can be highlighted because the key is absent in the JSON object.
+4. In that case, the record summary includes **key missing in record**.
 
 ### 6.1 Review uncapped errors
 
@@ -152,6 +159,9 @@ High-level flow:
 - Collapsible **All Errors** table containing every error row (uncapped).
 - Clickable top error rows with full JSON record viewer and automatic scroll to that panel.
 - Clickable all-error rows with the same full-record viewer behavior.
+- Selected record key highlighting for the exact field/path causing each error.
+- In-view legend text explaining highlighted key behavior.
+- Missing-key summary hint for required-field errors when the key does not exist in the record.
 - Export buttons:
   - `good-bids.json`
   - `bad-bids.json`
@@ -324,6 +334,17 @@ Fix:
 - Confirm there are failing rows in Top Errors.
 - Re-run validation if results were cleared.
 
+### Key is not highlighted in Selected Error Record
+
+Cause:
+- The field is missing from the JSON object (common for `is required` errors).
+- Or the error points to an array/container path instead of a concrete object key.
+
+Fix:
+- Check the summary line for **key missing in record**.
+- Confirm the expected key exists at the correct nesting level.
+- If needed, compare the row's `Field` value with the rendered object structure.
+
 ## Project Structure
 
 - `index.html`: App layout, controls, and default schema.
@@ -348,6 +369,8 @@ Fix:
 
 - Added a collapsible **All Errors** panel with uncapped error rows.
 - Added row-click support in **All Errors** to open **Selected Error Record**.
+- Added key-level highlighting in **Selected Error Record** for the field/path causing the selected error.
+- Added an inline legend and missing-key summary hint for required-field errors.
 - Adjusted required-field behavior so unselected fields (such as `BidDocuments[]`) are not validated.
 - Expanded date-time acceptance to include ISO date-only and slash date values (for example `03/05/2026`).
 - Added inline UI guidance clarifying required-field validation behavior.
