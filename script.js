@@ -306,6 +306,16 @@ function showErrorRecord(indexValue, source = 'top') {
     if (selectedErrorCard) {
         selectedErrorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+
+    // Scroll to the highlighted key if one was found in the rendered content.
+    if (renderedRecord.foundHighlight) {
+        requestAnimationFrame(() => {
+            const highlightedKey = content.querySelector('.record-key-highlight');
+            if (highlightedKey) {
+                highlightedKey.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
 }
 
 function getUniqueErrorFields(errors) {

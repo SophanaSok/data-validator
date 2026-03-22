@@ -466,12 +466,13 @@ tr:hover {
 }
 
 .record-key-highlight {
-    background: color-mix(in srgb, var(--danger) 18%, transparent);
+    background: color-mix(in srgb, var(--danger) 20%, transparent);
     color: var(--danger);
-    border: 1px solid color-mix(in srgb, var(--danger) 60%, transparent);
+    border: 2px solid var(--danger);
     border-radius: 4px;
     padding: 0 4px;
     font-weight: 700;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--danger) 35%, transparent);
 }
 
 [data-theme="dark"] .record-key-highlight {
