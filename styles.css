@@ -177,6 +177,14 @@ select[multiple] {
     height: 160px;
 }
 
+.selection-count {
+    margin-top: 0.45rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--accent) 78%, var(--text));
+}
+
 .file-drop {
     border: 2px dashed var(--border);
     border-radius: var(--radius-md);

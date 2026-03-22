@@ -16,6 +16,7 @@ function initApp() {
         fileList: document.getElementById('fileList'),
         schema: document.getElementById('schema'),
         requiredFields: document.getElementById('requiredFields'),
+        requiredSelectionCount: document.getElementById('requiredSelectionCount'),
         manualRequiredFields: document.getElementById('manualRequiredFields'),
         progress: document.getElementById('progress'),
         progressBar: document.getElementById('progressBar'),
@@ -36,6 +37,8 @@ function bindUIEvents() {
 
     if (ui.requiredFields) {
         enableOptionClickToggle(ui.requiredFields);
+        ui.requiredFields.addEventListener('change', () => updateRequiredSelectionCount(ui.requiredFields));
+        updateRequiredSelectionCount(ui.requiredFields);
     }
 
     if (ui.validateBtn) {
@@ -130,7 +133,18 @@ function enableOptionClickToggle(selectElement) {
         // Prevent the browser's default selection handling so each click toggles one option.
         e.preventDefault();
         option.selected = !option.selected;
+        updateRequiredSelectionCount(selectElement);
     });
+}
+
+function updateRequiredSelectionCount(selectElement) {
+    if (!ui || !ui.requiredSelectionCount || !selectElement) {
+        return;
+    }
+
+    const count = Array.from(selectElement.options).filter(option => option.selected).length;
+    const noun = count === 1 ? 'field' : 'fields';
+    ui.requiredSelectionCount.textContent = `Selected: ${count} ${noun}`;
 }
 
 function handleErrorFieldFilterChange(e) {
