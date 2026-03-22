@@ -257,12 +257,21 @@ function tokensEqual(a, b) {
 function renderRecordWithHighlightedKey(record, errorPath) {
     const rawTokens = parsePathTokens(errorPath);
     const targetTokens = stripTrailingNumericTokens(rawTokens);
-    const rendered = renderJsonNodeWithHighlight(record, targetTokens, [], 0);
 
-    return {
-        html: rendered.html,
-        foundHighlight: rendered.foundHighlight
-    };
+    // Try the most specific target first, then progressively fall back to parent keys.
+    // This keeps highlighting useful when nested paths point inside stringified JSON values.
+    for (let i = targetTokens.length; i >= 0; i--) {
+        const candidateTokens = targetTokens.slice(0, i);
+        const rendered = renderJsonNodeWithHighlight(record, candidateTokens, [], 0);
+        if (rendered.foundHighlight || candidateTokens.length === 0) {
+            return {
+                html: rendered.html,
+                foundHighlight: rendered.foundHighlight
+            };
+        }
+    }
+
+    return { html: escapeHTML(JSON.stringify(record, null, 2)), foundHighlight: false };
 }
 
 function renderJsonNodeWithHighlight(value, targetTokens, currentTokens, depth) {
