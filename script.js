@@ -146,12 +146,23 @@ function enableOptionClickToggle(selectElement) {
         
         // Prevent the browser's default selection handling so each click toggles one option.
         e.preventDefault();
+        
+        // Temporarily suppress scroll behavior by disabling overflow.
+        const originalOverflow = selectElement.style.overflow;
+        selectElement.style.overflow = 'hidden';
+        
         option.selected = !option.selected;
         
-        // Restore scroll immediately and again after layout calculations.
+        // Restore overflow and scroll position using multiple timing strategies.
+        selectElement.style.overflow = originalOverflow;
         selectElement.scrollTop = scrollTop;
+        
+        // Use multiple timing mechanisms to ensure scroll position persists.
         requestAnimationFrame(() => {
             selectElement.scrollTop = scrollTop;
+            setTimeout(() => {
+                selectElement.scrollTop = scrollTop;
+            }, 0);
         });
         
         updateRequiredSelectionCount(selectElement);
