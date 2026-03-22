@@ -26,8 +26,8 @@ function initApp() {
 }
 
 function bindUIEvents() {
-    if (ui.themeToggle) {
-        ui.themeToggle.addEventListener('click', toggleTheme);
+    if (window.ThemeController && ui.themeToggle) {
+        window.ThemeController.init(ui.themeToggle);
     }
 
     if (ui.applySchemaBtn) {
@@ -118,13 +118,6 @@ function bindUIEvents() {
 function openFilePicker() {
     if (ui && ui.fileInput) {
         ui.fileInput.click();
-    }
-}
-
-function toggleTheme() {
-    document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-    if (ui && ui.themeToggle) {
-        ui.themeToggle.textContent = document.body.dataset.theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
     }
 }
 
