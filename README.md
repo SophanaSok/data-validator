@@ -20,6 +20,91 @@ This app lets you:
 6. Click a row in **Top Errors** to inspect the full JSON record.
 7. Download `good-bids.json`, `bad-bids.json`, or `errors.csv`.
 
+## How To Use The App
+
+### 1. Access the app via GitHub Pages
+
+The app is hosted on GitHub Pages. Open:
+
+```
+https://SophanaSok.github.io/data-validator
+```
+
+The app will load directly in your browser—no installation required.
+
+### 2. Choose required fields
+
+1. The following four fields are **preselected by default**: `AgentName`, `AgentID`, `LegacyAgentID`, and `ResourceURL`.
+2. Adjust the selection as needed using multi-select (`Ctrl+Click` / `Cmd+Click`).
+3. Optionally add more names in **Manual Required Fields**.
+4. Click **Apply to Schema**.
+5. Confirm the success message with the count of required fields applied.
+
+### 3. Review schema
+
+- Verify schema JSON in the editor.
+- Make additional edits if needed.
+- Think of the schema like a set of nested folders the validator must open in order:
+  `properties` -> `Export` -> `items`.
+- If any one of those is missing, the app does not know where the "rules for each bid record" are stored, so validation cannot start.
+- In plain terms: this is the exact location where the app expects the checklist for each bid.
+- Minimum shape the schema must have:
+
+```json
+{
+  "properties": {
+    "Export": {
+      "items": {}
+    }
+  }
+}
+```
+
+### 4. Load files
+
+- Drag files into the drop zone, or click to browse.
+- Confirm file list appears.
+- Remove files with the **Remove** button if needed.
+
+### 5. Run validation
+
+- Click **Validate Batch**.
+- Wait for progress to complete.
+- Review pass rate, gate status, and top errors.
+
+### 6. Inspect full record from top errors
+
+1. In **Top Errors**, click any row.
+2. The page auto-scrolls to **Selected Error Record**.
+3. View the full JSON payload for the selected row.
+4. Use this to debug exactly what failed in context.
+
+### 7. Export outputs
+
+- **Good Records JSON**: all passing records.
+- **Bad Records JSON**: all failing records.
+- **Error Report CSV**: flattened error details.
+
+## Example Workflow
+
+1. Select `ProjectCode`, `BidURL`, `PublishedDate`, and `ResourceURL`.
+2. Click **Apply to Schema**.
+3. Upload one or more `.json` files.
+4. Click **Validate Batch**.
+5. Open a top error row and inspect the full record.
+6. Fix data upstream and rerun validation.
+7. Export clean and error outputs.
+
+## UI Guide
+
+- **Theme Toggle**: switches between light and dark mode.
+- **User Guide Link**: opens the GitHub-style README viewer page.
+- **Validation Engine Badge**: currently indicates local validation.
+- **Results Panel**: regenerated on each validation run.
+- **Top Errors Table**:
+  - Click row to load record detail panel and auto-scroll to it.
+  - Keyboard accessible with `Tab`, `Enter`, or `Space`.
+
 ## What The App Does
 
 The validator checks each input record against the schema found in the JSON Schema editor.
@@ -143,91 +228,6 @@ Important behavior details:
 - Invalid JSON files are skipped silently during batch parse.
 - Top error table shows first 50 errors only.
 - Full error data is still available in downloads.
-
-## How To Use The App
-
-### 1. Access the app via GitHub Pages
-
-The app is hosted on GitHub Pages. Open:
-
-```
-https://SophanaSok.github.io/data-validator
-```
-
-The app will load directly in your browser—no installation required.
-
-### 2. Choose required fields
-
-1. The following four fields are **preselected by default**: `AgentName`, `AgentID`, `LegacyAgentID`, and `ResourceURL`.
-2. Adjust the selection as needed using multi-select (`Ctrl+Click` / `Cmd+Click`).
-3. Optionally add more names in **Manual Required Fields**.
-4. Click **Apply to Schema**.
-5. Confirm the success message with the count of required fields applied.
-
-### 3. Review schema
-
-- Verify schema JSON in the editor.
-- Make additional edits if needed.
-- Think of the schema like a set of nested folders the validator must open in order:
-  `properties` -> `Export` -> `items`.
-- If any one of those is missing, the app does not know where the "rules for each bid record" are stored, so validation cannot start.
-- In plain terms: this is the exact location where the app expects the checklist for each bid.
-- Minimum shape the schema must have:
-
-```json
-{
-  "properties": {
-    "Export": {
-      "items": {}
-    }
-  }
-}
-```
-
-### 4. Load files
-
-- Drag files into the drop zone, or click to browse.
-- Confirm file list appears.
-- Remove files with the **Remove** button if needed.
-
-### 5. Run validation
-
-- Click **Validate Batch**.
-- Wait for progress to complete.
-- Review pass rate, gate status, and top errors.
-
-### 6. Inspect full record from top errors
-
-1. In **Top Errors**, click any row.
-2. The page auto-scrolls to **Selected Error Record**.
-3. View the full JSON payload for the selected row.
-4. Use this to debug exactly what failed in context.
-
-### 7. Export outputs
-
-- **Good Records JSON**: all passing records.
-- **Bad Records JSON**: all failing records.
-- **Error Report CSV**: flattened error details.
-
-## Example Workflow
-
-1. Select `ProjectCode`, `BidURL`, `PublishedDate`, and `ResourceURL`.
-2. Click **Apply to Schema**.
-3. Upload one or more `.json` files.
-4. Click **Validate Batch**.
-5. Open a top error row and inspect the full record.
-6. Fix data upstream and rerun validation.
-7. Export clean and error outputs.
-
-## UI Guide
-
-- **Theme Toggle**: switches between light and dark mode.
-- **User Guide Link**: opens the GitHub-style README viewer page.
-- **Validation Engine Badge**: currently indicates local validation.
-- **Results Panel**: regenerated on each validation run.
-- **Top Errors Table**:
-  - Click row to load record detail panel and auto-scroll to it.
-  - Keyboard accessible with `Tab`, `Enter`, or `Space`.
 
 ## Troubleshooting
 
