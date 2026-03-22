@@ -19,7 +19,10 @@
         </div>
         
         <div class="card">
-            <label>Select Required Fields <small>(Click to select, click again to deselect, then Apply)</small></label>
+            <div class="select-header">
+                <label>Select Required Fields <small>(Click to select, click again to deselect, then Apply)</small></label>
+                <button id="selectAllBtn" type="button" class="select-all-btn">Select All</button>
+            </div>
             <select id="requiredFields" multiple>
                 <option selected>AgentName</option><option selected>AgentID</option><option selected>LegacyAgentID</option><option selected>ResourceURL</option>
                 <option>AwardDate</option><option value="BidDocuments">BidDocuments[]</option><option>BidStatus</option><option>BidType</option>

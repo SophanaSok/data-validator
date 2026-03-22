@@ -41,6 +41,17 @@ function bindUIEvents() {
         updateRequiredSelectionCount(ui.requiredFields);
     }
 
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    if (selectAllBtn && ui.requiredFields) {
+        selectAllBtn.addEventListener('click', () => {
+            const allSelected = Array.from(ui.requiredFields.options).every(o => o.selected);
+            Array.from(ui.requiredFields.options).forEach(o => {
+                o.selected = !allSelected;
+            });
+            updateRequiredSelectionCount(ui.requiredFields);
+        });
+    }
+
     if (ui.validateBtn) {
         ui.validateBtn.addEventListener('click', validateFiles);
     }
@@ -130,10 +141,18 @@ function enableOptionClickToggle(selectElement) {
             return;
         }
 
+        // Preserve scroll position when toggling option selection.
+        const scrollTop = selectElement.scrollTop;
+        
         // Prevent the browser's default selection handling so each click toggles one option.
         e.preventDefault();
         option.selected = !option.selected;
         updateRequiredSelectionCount(selectElement);
+        
+        // Restore scroll position after a microtask to ensure DOM is updated.
+        Promise.resolve().then(() => {
+            selectElement.scrollTop = scrollTop;
+        });
     });
 }
 
@@ -142,9 +161,15 @@ function updateRequiredSelectionCount(selectElement) {
         return;
     }
 
-    const count = Array.from(selectElement.options).filter(option => option.selected).length;
-    const noun = count === 1 ? 'field' : 'fields';
-    ui.requiredSelectionCount.textContent = `Selected: ${count} ${noun}`;
+    const selected = Array.from(selectElement.options).filter(option => option.selected);
+    const count = selected.length;
+    
+    if (count === 0) {
+        ui.requiredSelectionCount.textContent = 'No fields selected';
+    } else {
+        const fieldNames = selected.map(o => o.textContent).join(', ');
+        ui.requiredSelectionCount.textContent = `Selected: ${fieldNames}`;
+    }
 }
 
 function handleErrorFieldFilterChange(e) {

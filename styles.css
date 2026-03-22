@@ -177,12 +177,36 @@ select[multiple] {
     height: 160px;
 }
 
+.select-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.select-header label {
+    margin-bottom: 0;
+}
+
+.select-all-btn {
+    margin: 0;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    background: color-mix(in srgb, var(--accent) 88%, white);
+    white-space: nowrap;
+}
+
+.select-all-btn:hover {
+    background: color-mix(in srgb, var(--accent) 76%, black);
+}
+
 .selection-count {
     margin-top: 0.45rem;
     margin-bottom: 0.75rem;
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 500;
     color: color-mix(in srgb, var(--accent) 78%, var(--text));
+    word-break: break-word;
 }
 
 .file-drop {
