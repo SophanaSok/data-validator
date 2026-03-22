@@ -212,13 +212,114 @@ function showErrorRecord(indexValue, source = 'top') {
         return;
     }
 
-    summary.textContent = `${selected.file} | record ${selected.index} | ${selected.field} | ${selected.message}`;
-    content.textContent = JSON.stringify(selected.record, null, 2);
+    const renderedRecord = renderRecordWithHighlightedKey(selected.record, selected.path);
+    const keyMissingNote = !renderedRecord.foundHighlight
+        && selected.path
+        && /required/i.test(String(selected.message || ''))
+        ? ' | key missing in record'
+        : '';
+
+    summary.textContent = `${selected.file} | record ${selected.index} | ${selected.field} | ${selected.message}${keyMissingNote}`;
+    content.innerHTML = renderedRecord.html;
 
     const selectedErrorCard = ui.results.querySelector('#selectedErrorRecord');
     if (selectedErrorCard) {
         selectedErrorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+}
+
+function parsePathTokens(path) {
+    return String(path || '').split('/').filter(Boolean);
+}
+
+function stripTrailingNumericTokens(tokens) {
+    const copy = [...tokens];
+    while (copy.length && /^\d+$/.test(copy[copy.length - 1])) {
+        copy.pop();
+    }
+    return copy;
+}
+
+function tokensEqual(a, b) {
+    if (a.length !== b.length) {
+        return false;
+    }
+
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function renderRecordWithHighlightedKey(record, errorPath) {
+    const rawTokens = parsePathTokens(errorPath);
+    const targetTokens = stripTrailingNumericTokens(rawTokens);
+    const rendered = renderJsonNodeWithHighlight(record, targetTokens, [], 0);
+
+    return {
+        html: rendered.html,
+        foundHighlight: rendered.foundHighlight
+    };
+}
+
+function renderJsonNodeWithHighlight(value, targetTokens, currentTokens, depth) {
+    const indent = '  '.repeat(depth);
+    const nextIndent = '  '.repeat(depth + 1);
+
+    if (Array.isArray(value)) {
+        if (!value.length) {
+            return { html: '[]', foundHighlight: false };
+        }
+
+        const lines = ['['];
+        let foundHighlight = false;
+
+        value.forEach((entry, index) => {
+            const child = renderJsonNodeWithHighlight(entry, targetTokens, [...currentTokens, String(index)], depth + 1);
+            foundHighlight = foundHighlight || child.foundHighlight;
+            const suffix = index < value.length - 1 ? ',' : '';
+            lines.push(`${nextIndent}${child.html}${suffix}`);
+        });
+
+        lines.push(`${indent}]`);
+        return { html: lines.join('\n'), foundHighlight };
+    }
+
+    if (value && typeof value === 'object') {
+        const entries = Object.entries(value);
+        if (!entries.length) {
+            return { html: '{}', foundHighlight: false };
+        }
+
+        const lines = ['{'];
+        let foundHighlight = false;
+
+        entries.forEach(([key, childValue], index) => {
+            const keyPath = [...currentTokens, key];
+            const isTargetKey = targetTokens.length > 0 && tokensEqual(keyPath, targetTokens);
+            const keyText = escapeHTML(JSON.stringify(key));
+            const renderedKey = isTargetKey
+                ? `<span class="record-key-highlight">${keyText}</span>`
+                : keyText;
+
+            const child = renderJsonNodeWithHighlight(childValue, targetTokens, keyPath, depth + 1);
+            foundHighlight = foundHighlight || child.foundHighlight || isTargetKey;
+
+            const suffix = index < entries.length - 1 ? ',' : '';
+            lines.push(`${nextIndent}${renderedKey}: ${child.html}${suffix}`);
+        });
+
+        lines.push(`${indent}}`);
+        return { html: lines.join('\n'), foundHighlight };
+    }
+
+    return {
+        html: escapeHTML(JSON.stringify(value)),
+        foundHighlight: false
+    };
 }
 
 function updateSchema() {
@@ -421,6 +522,7 @@ async function validateFiles() {
 
         <div class="card" id="selectedErrorRecord">
             <h3>🧾 Selected Error Record</h3>
+            <p class="error-row-hint">Highlighted key = field causing the validation error.</p>
             <p id="errorRecordSummary">Select an error row above to inspect its full JSON payload.</p>
             <pre id="errorRecordContent" class="record-viewer">No record selected.</pre>
         </div>

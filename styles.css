@@ -398,6 +398,19 @@ tr:hover {
     word-break: break-word;
 }
 
+.record-key-highlight {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+    border: 1px solid color-mix(in srgb, var(--danger) 60%, transparent);
+    border-radius: 4px;
+    padding: 0 4px;
+    font-weight: 700;
+}
+
+[data-theme="dark"] .record-key-highlight {
+    background: rgba(248, 113, 113, 0.2);
+}
+
 .all-errors-panel summary {
     cursor: pointer;
     font-weight: 600;
