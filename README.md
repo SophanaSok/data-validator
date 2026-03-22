@@ -2,11 +2,12 @@
 
 A browser-based validator for scraped bid JSON files.
 
-This app lets you:
+Use it to:
 - Select required fields from a list (plus optional manual field names).
 - Apply those required fields directly into the schema.
 - Validate one or many JSON files in a single run.
 - Review pass/fail summaries and top validation errors.
+- Filter both **Top Errors** and **All Errors** by field.
 - Click any top error row to inspect the full JSON record (the page auto-scrolls to the record viewer).
 - Expand a collapsed **All Errors** section to review every error row (not capped).
 - Export passing records, failing records, and CSV error reports.
@@ -18,8 +19,8 @@ This app lets you:
 3. Drag one or more JSON files into the drop zone.
 4. Click **Validate Batch**.
 5. Review pass rate and gate status.
-6. Click a row in **Top Errors** to inspect the full JSON record.
-7. Expand **All Errors** when you need the uncapped full error list.
+6. Optionally filter **Top Errors** or **All Errors** by field.
+7. Click a row in **Top Errors** or **All Errors** to inspect the full JSON record.
 8. Download `good-bids.json`, `bad-bids.json`, or `errors.csv`.
 
 ## How To Use The App
@@ -32,7 +33,7 @@ The app is hosted on GitHub Pages. Open:
 https://SophanaSok.github.io/data-validator
 ```
 
-The app will load directly in your browser—no installation required.
+No installation is required.
 
 ### 2. Choose required fields
 
@@ -40,7 +41,7 @@ The app will load directly in your browser—no installation required.
 2. Adjust the selection as needed using multi-select (`Ctrl+Click` / `Cmd+Click`).
 3. Optionally add more names in **Manual Required Fields**.
 4. Click **Apply to Schema**.
-5. Confirm the success message with the count of required fields applied.
+5. Confirm the success message showing how many required fields were applied.
 
 ### 3. Review schema
 
@@ -48,8 +49,8 @@ The app will load directly in your browser—no installation required.
 - Make additional edits if needed.
 - Think of the schema like a set of nested folders the validator must open in order:
   `properties` -> `Export` -> `items`.
-- If any one of those is missing, the app does not know where the "rules for each bid record" are stored, so validation cannot start.
-- In plain terms: this is the exact location where the app expects the checklist for each bid.
+- If any one of those is missing, validation cannot start because the app cannot find per-record rules.
+- In plain terms, this is where the app expects the checklist for each bid.
 - Minimum shape the schema must have:
 
 ```json
@@ -74,26 +75,27 @@ The app will load directly in your browser—no installation required.
 - Wait for progress to complete.
 - Review pass rate, gate status, and top errors.
 
-### 6. Inspect full record from top errors
+### 6. Inspect full record from error tables
 
-1. In **Top Errors**, click any row.
+1. In **Top Errors** or **All Errors**, click any row.
 2. The page auto-scrolls to **Selected Error Record**.
 3. The JSON key causing the validation error is highlighted in the record viewer.
-4. Use this to debug exactly what failed in context.
+4. Use this to quickly debug what failed in context.
 
-### 6.2 Understand key highlighting
+### 6.1 Understand key highlighting
 
 1. In **Selected Error Record**, look for the legend text: **Highlighted key = field causing the validation error**.
 2. Highlighting follows the error path, including nested keys.
-3. For nested paths that cannot be resolved exactly in the rendered JSON (for example some `BidDocuments[]` nested errors), the viewer now falls back to the nearest parent key so a relevant key is still highlighted.
+3. For nested paths that cannot be resolved exactly in rendered JSON (for example some `BidDocuments[]` nested errors), the viewer falls back to the nearest parent key so a relevant key is still highlighted.
 4. For missing required fields, no key can be highlighted because the key is absent in the JSON object.
 5. In that case, the record summary includes **key missing in record**.
 
-### 6.1 Review uncapped errors
+### 6.2 Review uncapped errors
 
 1. Expand **All Errors** in the results panel.
 2. This table contains every error row found in the batch (not limited to 50 rows).
-3. Click any row to load the full JSON record in **Selected Error Record**.
+3. Optionally filter **All Errors** by field.
+4. Click any row to load the full JSON record in **Selected Error Record**.
 
 ### 7. Export outputs
 
@@ -113,21 +115,23 @@ The app will load directly in your browser—no installation required.
 
 ## UI Guide
 
-- **Theme Toggle**: switches between light and dark mode.
+- **Theme Toggle**: cycles through `System`, `Dark`, and `Light` modes.
 - **User Guide Link**: opens the GitHub-style README viewer page.
 - **Validation Engine Badge**: currently indicates local validation.
 - **Results Panel**: regenerated on each validation run.
 - **Top Errors Table**:
+  - Optional field filter for narrowing rows by error field.
   - Click row to load record detail panel and auto-scroll to it.
   - Keyboard accessible with `Tab`, `Enter`, or `Space`.
 - **All Errors Panel**:
   - Collapsed by default.
+  - Optional field filter for narrowing rows by error field.
   - Expand to see every error row (uncapped).
   - Clickable rows behave the same as Top Errors.
 
 ## What The App Does
 
-The validator checks each input record against the schema found in the JSON Schema editor.
+The validator checks each input record against the schema in the JSON Schema editor.
 
 High-level flow:
 1. You choose required fields and click **Apply to Schema**.
@@ -137,7 +141,7 @@ High-level flow:
    - Good records
    - Bad records
    - Error details per failing field
-5. The app shows a summary, Top Errors (first 50), All Errors (uncapped, collapsed by default), and download buttons.
+5. The app shows a summary, Top Errors (first 50), All Errors (uncapped and collapsed by default), and download buttons.
 
 ## Current Features
 
@@ -157,7 +161,9 @@ High-level flow:
   - `Pipeline Ready` when pass rate is at least `95%`
   - `Gate Failed` when pass rate is below `95%`
 - Top errors table (first 50 errors).
+- Field filter for **Top Errors** table.
 - Collapsible **All Errors** table containing every error row (uncapped).
+- Field filter for **All Errors** table.
 - Clickable top error rows with full JSON record viewer and automatic scroll to that panel.
 - Clickable all-error rows with the same full-record viewer behavior.
 - Selected record key highlighting for the exact field/path causing each error.
@@ -168,7 +174,7 @@ High-level flow:
   - `good-bids.json`
   - `bad-bids.json`
   - `errors.csv`
-- Light/Dark mode toggle.
+- Three-stage theme toggle: `System` -> `Dark` -> `Light`.
 
 ## Required Fields Selector
 
@@ -254,8 +260,9 @@ Important behavior details:
   - empty/whitespace string
   - empty array
 - Invalid JSON files are skipped silently during batch parse.
-- Top error table shows first 50 errors only.
+- Top error table shows first 50 errors only (and can be filtered by field).
 - The **All Errors** panel shows the uncapped full list in the UI.
+- The **All Errors** table can also be filtered by field.
 - Full error data is also available in downloads.
 - `date-time` accepts:
   - Strict ISO datetime with timezone (for example `2026-03-05T14:30:00Z`)
@@ -307,7 +314,7 @@ Cause:
 
 Fix:
 - Revisit selected required fields.
-- Confirm exact case-sensitive key names in data.
+- Confirm exact case-sensitive key names in the source data.
 
 ### URI/date-time errors are unexpected
 
@@ -316,7 +323,7 @@ Cause:
 
 Fix:
 - Ensure those fields are required if you want strict checks.
-- Or update validator logic in `script.js` to enforce formats for optional fields too.
+- Or update validator logic in `script.js` if you want format checks on optional fields too.
 
 ### BidDocuments errors appear when not selected
 
@@ -333,7 +340,7 @@ Cause:
 - No rows rendered (no errors) or selected index is unavailable.
 
 Fix:
-- Confirm there are failing rows in Top Errors.
+- Confirm there are failing rows in **Top Errors**.
 - Re-run validation if results were cleared.
 
 ### Key is not highlighted in Selected Error Record
@@ -350,22 +357,26 @@ Fix:
 ## Project Structure
 
 - `index.html`: App layout, controls, and default schema.
-- `styles.css`: Theme and component styling.
-- `script.js`: State, validation flow, and rendering logic.
-- `readme.html`: GitHub-style README viewer with theme toggle.
-- `README.md`: Documentation and user guide.
+- `styles.css`: App theme and component styling.
+- `script.js`: App state, validation flow, and rendering logic.
+- `theme.js`: Shared 3-mode theme controller (`System`, `Dark`, `Light`).
+- `readme.html`: User guide viewer layout.
+- `readme.css`: User guide styling.
+- `readme.js`: User guide rendering logic.
+- `README.md`: Documentation and user guide content source.
 
 ## Development Notes
 
 - No build step is required.
 - No external runtime dependency is required for validation logic.
 - `readme.html` uses CDN-hosted `marked` and `github-markdown-css` for README rendering.
+- User-guide CSS and JS are split into `readme.css` and `readme.js`.
 
 ## Known Limitations
 
 - Validation focuses on a subset of JSON Schema behavior.
 - Top errors panel is capped at 50 rows for readability (use **All Errors** for uncapped rows).
-- Invalid JSON files are skipped without detailed per-file parse messaging.
+- Invalid JSON files are skipped without detailed per-file parse messages.
 
 ## What Changed Recently
 
@@ -376,6 +387,9 @@ Fix:
 - Adjusted required-field behavior so unselected fields (such as `BidDocuments[]`) are not validated.
 - Expanded date-time acceptance to include ISO date-only and slash date values (for example `03/05/2026`).
 - Added inline UI guidance clarifying required-field validation behavior.
+- Added field filters for **Top Errors** and **All Errors** tables.
+- Updated theme behavior to a shared 3-mode toggle (`System`, `Dark`, `Light`) with system as default.
+- Moved README viewer inline styles/scripts into `readme.css` and `readme.js`.
 
 ## License
 
