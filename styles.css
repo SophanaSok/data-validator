@@ -137,6 +137,17 @@ label {
     margin-bottom: 0.5rem;
 }
 
+.field-hint {
+    margin-top: 0.6rem;
+    color: #64748b;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+[data-theme="dark"] .field-hint {
+    color: #94a3b8;
+}
+
 textarea,
 select {
     width: 100%;
