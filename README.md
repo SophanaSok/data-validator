@@ -344,6 +344,14 @@ Fix:
 - Top errors panel is capped at 50 rows for readability (use **All Errors** for uncapped rows).
 - Invalid JSON files are skipped without detailed per-file parse messaging.
 
+## What Changed Recently
+
+- Added a collapsible **All Errors** panel with uncapped error rows.
+- Added row-click support in **All Errors** to open **Selected Error Record**.
+- Adjusted required-field behavior so unselected fields (such as `BidDocuments[]`) are not validated.
+- Expanded date-time acceptance to include ISO date-only and slash date values (for example `03/05/2026`).
+- Added inline UI guidance clarifying required-field validation behavior.
+
 ## License
 
 No license file is currently defined in this repository.

@@ -226,7 +226,7 @@
     <header class="topbar">
         <a href="index.html">Back to Validator</a>
         <button id="themeToggle" class="theme-toggle" type="button">🌙 Dark Mode</button>
-        <span class="status" id="status">Loading README...</span>
+        <span class="status" id="status">Loading User Guide...</span>
     </header>
 
     <article id="content" class="markdown-body"></article>
@@ -271,10 +271,10 @@
 
                 const markdown = await response.text();
                 content.innerHTML = marked.parse(markdown);
-                status.textContent = 'README loaded';
+                status.textContent = 'User Guide loaded';
             } catch (error) {
-                content.innerHTML = '<h1>README unavailable</h1><p>Could not load README.md. If you opened this file directly from disk, run a local server first (for example: <code>python3 -m http.server 8000</code>).</p>';
-                status.textContent = 'Failed to load README';
+                content.innerHTML = '<h1>User Guide unavailable</h1><p>Could not load README.md. If you opened this file directly from disk, run a local server first (for example: <code>python3 -m http.server 8000</code>).</p>';
+                status.textContent = 'Failed to load User Guide';
             }
         }
 
