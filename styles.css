@@ -384,7 +384,38 @@ tr:hover {
     font-size: 0.9rem;
 }
 
+.error-filter-row {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-bottom: 0.8rem;
+}
+
+.error-filter-row label {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.error-field-filter {
+    max-width: 340px;
+    min-width: 220px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.error-filter-count {
+    color: color-mix(in srgb, var(--text) 58%, transparent);
+    font-size: 0.85rem;
+}
+
 [data-theme="dark"] .error-row-hint {
+    color: color-mix(in srgb, var(--text) 64%, transparent);
+}
+
+[data-theme="dark"] .error-filter-count {
     color: color-mix(in srgb, var(--text) 64%, transparent);
 }
 
@@ -482,6 +513,12 @@ tbody tr:nth-child(even) {
 
     .file-remove {
         width: auto;
+    }
+
+    .error-field-filter {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
     }
 }
 

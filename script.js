@@ -93,6 +93,7 @@ function bindUIEvents() {
 
     if (ui.results) {
         ui.results.addEventListener('click', handleTopErrorRowClick);
+        ui.results.addEventListener('change', handleErrorFieldFilterChange);
         ui.results.addEventListener('keydown', e => {
             const row = e.target.closest('.error-row');
             if (!row) {
@@ -113,6 +114,36 @@ function bindUIEvents() {
             }
         });
     });
+}
+
+function handleErrorFieldFilterChange(e) {
+    const filter = e.target.closest('.error-field-filter');
+    if (!filter) {
+        return;
+    }
+
+    applyErrorFieldFilter(filter.dataset.filterSource, filter.value);
+}
+
+function applyErrorFieldFilter(source, selectedField) {
+    if (!ui || !ui.results) {
+        return;
+    }
+
+    const sourceKey = source === 'all' ? 'all' : 'top';
+    const sourceErrors = sourceKey === 'all' ? allErrorsPreview : topErrorsPreview;
+    const filteredEntries = filterErrorsByField(sourceErrors, selectedField);
+
+    const tableBody = ui.results.querySelector(sourceKey === 'all' ? '#allErrorsBody' : '#topErrorsBody');
+    if (tableBody) {
+        tableBody.innerHTML = renderErrorRowsForTable(filteredEntries, sourceKey);
+    }
+
+    const countText = `${filteredEntries.length} of ${sourceErrors.length}`;
+    const countTarget = ui.results.querySelector(sourceKey === 'all' ? '#allErrorsCount' : '#topErrorsCount');
+    if (countTarget) {
+        countTarget.textContent = countText;
+    }
 }
 
 function openFilePicker() {
@@ -219,6 +250,43 @@ function showErrorRecord(indexValue, source = 'top') {
     if (selectedErrorCard) {
         selectedErrorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+}
+
+function getUniqueErrorFields(errors) {
+    return Array.from(new Set((errors || []).map(err => err.field || '(root)'))).sort((a, b) =>
+        String(a).localeCompare(String(b))
+    );
+}
+
+function buildErrorFieldFilterOptions(errors) {
+    return ['<option value="">All fields</option>']
+        .concat(getUniqueErrorFields(errors).map(field => `<option value="${escapeHTML(field)}">${escapeHTML(field)}</option>`))
+        .join('');
+}
+
+function filterErrorsByField(errors, selectedField) {
+    const expectedField = String(selectedField || '');
+    return (errors || [])
+        .map((error, index) => ({ error, index }))
+        .filter(({ error }) => !expectedField || error.field === expectedField);
+}
+
+function renderErrorRowsForTable(entries, source) {
+    if (!entries.length) {
+        return '<tr><td colspan="5">No errors match the selected field.</td></tr>';
+    }
+
+    return entries
+        .map(({ error, index }) => `
+            <tr class="error-row" data-error-index="${index}" data-error-source="${source}" tabindex="0" role="button" aria-label="View record ${error.index} from ${escapeHTML(error.file)}">
+                <td>${escapeHTML(error.file)}</td>
+                <td>${error.index}</td>
+                <td>${escapeHTML(error.field)}</td>
+                <td>${escapeHTML(formatFieldValue(error.value))}</td>
+                <td>${escapeHTML(error.message)}</td>
+            </tr>
+        `)
+        .join('');
 }
 
 function parsePathTokens(path) {
@@ -463,6 +531,9 @@ async function validateFiles() {
     topErrorsPreview = allErrors.slice(0, 50);
     allErrorsPreview = allErrors;
 
+    const topFieldOptions = buildErrorFieldFilterOptions(topErrorsPreview);
+    const allFieldOptions = buildErrorFieldFilterOptions(allErrorsPreview);
+
     ui.results.innerHTML = `
         <div class="stats-grid">
             <div class="stat ${isPass ? 'pass' : 'fail'}">
@@ -490,14 +561,19 @@ async function validateFiles() {
 
         <div class="card">
             <h3>🔥 Top Errors</h3>
+            <div class="error-filter-row">
+                <label for="topErrorFieldFilter">Filter by field</label>
+                <select id="topErrorFieldFilter" class="error-field-filter" data-filter-source="top">
+                    ${topFieldOptions}
+                </select>
+                <span id="topErrorsCount" class="error-filter-count">${topErrorsPreview.length} of ${topErrorsPreview.length}</span>
+            </div>
             <table>
                 <thead>
                     <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
                 </thead>
-                <tbody>
-                ${topErrorsPreview
-                    .map((e, index) => `<tr class="error-row" data-error-index="${index}" data-error-source="top" tabindex="0" role="button" aria-label="View record ${e.index} from ${escapeHTML(e.file)}"><td>${escapeHTML(e.file)}</td><td>${e.index}</td><td>${escapeHTML(e.field)}</td><td>${escapeHTML(formatFieldValue(e.value))}</td><td>${escapeHTML(e.message)}</td></tr>`)
-                    .join('')}
+                <tbody id="topErrorsBody">
+                ${renderErrorRowsForTable(filterErrorsByField(topErrorsPreview, ''), 'top')}
                 </tbody>
             </table>
             <p class="error-row-hint">Click any error row to view the full JSON record.</p>
@@ -507,15 +583,20 @@ async function validateFiles() {
             <details class="all-errors-panel">
                 <summary>📚 All Errors (${allErrors.length})</summary>
                 <p class="error-row-hint">This section includes every error row (not capped). Click any row to inspect the full JSON record.</p>
+                <div class="error-filter-row">
+                    <label for="allErrorFieldFilter">Filter by field</label>
+                    <select id="allErrorFieldFilter" class="error-field-filter" data-filter-source="all">
+                        ${allFieldOptions}
+                    </select>
+                    <span id="allErrorsCount" class="error-filter-count">${allErrorsPreview.length} of ${allErrorsPreview.length}</span>
+                </div>
                 <div class="all-errors-table-wrap">
                     <table>
                         <thead>
                             <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
                         </thead>
-                        <tbody>
-                        ${allErrors
-                            .map((e, index) => `<tr class="error-row" data-error-index="${index}" data-error-source="all" tabindex="0" role="button" aria-label="View record ${e.index} from ${escapeHTML(e.file)}"><td>${escapeHTML(e.file)}</td><td>${e.index}</td><td>${escapeHTML(e.field)}</td><td>${escapeHTML(formatFieldValue(e.value))}</td><td>${escapeHTML(e.message)}</td></tr>`)
-                            .join('')}
+                        <tbody id="allErrorsBody">
+                        ${renderErrorRowsForTable(filterErrorsByField(allErrorsPreview, ''), 'all')}
                         </tbody>
                     </table>
                 </div>
