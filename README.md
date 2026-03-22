@@ -306,7 +306,6 @@ Fix:
 - No build step is required.
 - No external runtime dependency is required for validation logic.
 - `readme.html` uses CDN-hosted `marked` and `github-markdown-css` for README rendering.
-- SortableJS is loaded in `index.html` but currently not used by app behavior.
 
 ## Known Limitations
 
