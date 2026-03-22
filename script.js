@@ -2,6 +2,7 @@ let selectedFiles = [];
 let ui = null;
 let lastValidationData = { good: [], bad: [], errors: [] };
 let topErrorsPreview = [];
+let allErrorsPreview = [];
 
 document.addEventListener('DOMContentLoaded', initApp);
 
@@ -100,7 +101,7 @@ function bindUIEvents() {
 
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                showErrorRecord(row.dataset.errorIndex);
+                showErrorRecord(row.dataset.errorIndex, row.dataset.errorSource);
             }
         });
     }
@@ -181,22 +182,30 @@ function handleTopErrorRowClick(e) {
         return;
     }
 
-    showErrorRecord(row.dataset.errorIndex);
+    showErrorRecord(row.dataset.errorIndex, row.dataset.errorSource);
 }
 
-function showErrorRecord(indexValue) {
+function showErrorRecord(indexValue, source = 'top') {
     const index = Number(indexValue);
-    if (Number.isNaN(index) || !topErrorsPreview[index] || !ui || !ui.results) {
+    if (Number.isNaN(index) || !ui || !ui.results) {
         return;
     }
 
-    const selected = topErrorsPreview[index];
+    const list = source === 'all' ? allErrorsPreview : topErrorsPreview;
+    const selected = list[index];
+    if (!selected) {
+        return;
+    }
+
     const summary = ui.results.querySelector('#errorRecordSummary');
     const content = ui.results.querySelector('#errorRecordContent');
     const rows = ui.results.querySelectorAll('.error-row');
 
     rows.forEach(row => {
-        row.classList.toggle('active', Number(row.dataset.errorIndex) === index);
+        row.classList.toggle(
+            'active',
+            Number(row.dataset.errorIndex) === index && (row.dataset.errorSource || 'top') === source
+        );
     });
 
     if (!summary || !content) {
@@ -349,6 +358,7 @@ async function validateFiles() {
     lastValidationData = { good: allGood, bad: allBad, errors: allErrors };
 
     topErrorsPreview = allErrors.slice(0, 50);
+    allErrorsPreview = allErrors;
 
     ui.results.innerHTML = `
         <div class="stats-grid">
@@ -383,11 +393,30 @@ async function validateFiles() {
                 </thead>
                 <tbody>
                 ${topErrorsPreview
-                    .map((e, index) => `<tr class="error-row" data-error-index="${index}" tabindex="0" role="button" aria-label="View record ${e.index} from ${escapeHTML(e.file)}"><td>${escapeHTML(e.file)}</td><td>${e.index}</td><td>${escapeHTML(e.field)}</td><td>${escapeHTML(formatFieldValue(e.value))}</td><td>${escapeHTML(e.message)}</td></tr>`)
+                    .map((e, index) => `<tr class="error-row" data-error-index="${index}" data-error-source="top" tabindex="0" role="button" aria-label="View record ${e.index} from ${escapeHTML(e.file)}"><td>${escapeHTML(e.file)}</td><td>${e.index}</td><td>${escapeHTML(e.field)}</td><td>${escapeHTML(formatFieldValue(e.value))}</td><td>${escapeHTML(e.message)}</td></tr>`)
                     .join('')}
                 </tbody>
             </table>
             <p class="error-row-hint">Click any error row to view the full JSON record.</p>
+        </div>
+
+        <div class="card">
+            <details class="all-errors-panel">
+                <summary>📚 All Errors (${allErrors.length})</summary>
+                <p class="error-row-hint">This section includes every error row (not capped). Click any row to inspect the full JSON record.</p>
+                <div class="all-errors-table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
+                        </thead>
+                        <tbody>
+                        ${allErrors
+                            .map((e, index) => `<tr class="error-row" data-error-index="${index}" data-error-source="all" tabindex="0" role="button" aria-label="View record ${e.index} from ${escapeHTML(e.file)}"><td>${escapeHTML(e.file)}</td><td>${e.index}</td><td>${escapeHTML(e.field)}</td><td>${escapeHTML(formatFieldValue(e.value))}</td><td>${escapeHTML(e.message)}</td></tr>`)
+                            .join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </details>
         </div>
 
         <div class="card" id="selectedErrorRecord">

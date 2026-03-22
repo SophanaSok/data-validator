@@ -398,6 +398,24 @@ tr:hover {
     word-break: break-word;
 }
 
+.all-errors-panel summary {
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+}
+
+.all-errors-panel[open] summary {
+    margin-bottom: 0.75rem;
+}
+
+.all-errors-table-wrap {
+    max-height: 520px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+}
+
 tbody tr:nth-child(even) {
     background: rgba(148, 163, 184, 0.08);
 }
