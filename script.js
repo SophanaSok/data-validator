@@ -149,8 +149,8 @@ function enableOptionClickToggle(selectElement) {
         option.selected = !option.selected;
         updateRequiredSelectionCount(selectElement);
         
-        // Restore scroll position after a microtask to ensure DOM is updated.
-        Promise.resolve().then(() => {
+        // Restore scroll position before the next paint.
+        requestAnimationFrame(() => {
             selectElement.scrollTop = scrollTop;
         });
     });
