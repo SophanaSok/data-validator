@@ -205,6 +205,11 @@ function showErrorRecord(indexValue) {
 
     summary.textContent = `${selected.file} | record ${selected.index} | ${selected.field} | ${selected.message}`;
     content.textContent = JSON.stringify(selected.record, null, 2);
+
+    const selectedErrorCard = ui.results.querySelector('#selectedErrorRecord');
+    if (selectedErrorCard) {
+        selectedErrorCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 function updateSchema() {
@@ -385,7 +390,7 @@ async function validateFiles() {
             <p class="error-row-hint">Click any error row to view the full JSON record.</p>
         </div>
 
-        <div class="card">
+        <div class="card" id="selectedErrorRecord">
             <h3>🧾 Selected Error Record</h3>
             <p id="errorRecordSummary">Select an error row above to inspect its full JSON payload.</p>
             <pre id="errorRecordContent" class="record-viewer">No record selected.</pre>
