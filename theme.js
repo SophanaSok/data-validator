@@ -11,6 +11,12 @@
     let activeMode = 'system';
     let activeButton = null;
 
+    function ensureDefaultMode() {
+        if (!localStorage.getItem(STORAGE_KEY)) {
+            localStorage.setItem(STORAGE_KEY, 'system');
+        }
+    }
+
     function getStoredMode() {
         const saved = localStorage.getItem(STORAGE_KEY);
         return MODES.includes(saved) ? saved : 'system';
@@ -57,6 +63,7 @@
 
     function init(button) {
         activeButton = button || null;
+        ensureDefaultMode();
         applyMode(getStoredMode());
 
         if (activeButton) {
