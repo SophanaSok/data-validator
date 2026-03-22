@@ -38,10 +38,11 @@ No installation is required.
 ### 2. Choose required fields
 
 1. The following four fields are **preselected by default**: `AgentName`, `AgentID`, `LegacyAgentID`, and `ResourceURL`.
-2. Adjust the selection as needed using multi-select (`Ctrl+Click` / `Cmd+Click`).
-3. Optionally add more names in **Manual Required Fields**.
-4. Click **Apply to Schema**.
-5. Confirm the success message showing how many required fields were applied.
+2. Adjust the selection with normal clicks: click once to select, click again to deselect (no modifier keys required).
+3. Watch the live `Selected: X fields` indicator under the selector as you choose fields.
+4. Optionally add more names in **Manual Required Fields**.
+5. Click **Apply to Schema**.
+6. Confirm the success message showing how many required fields were applied.
 
 ### 3. Review schema
 
@@ -149,7 +150,8 @@ High-level flow:
 - Drag-and-drop upload and click-to-browse upload.
 - Selected-file list with per-file remove action.
 - Editable schema text area.
-- Required field selector (`Ctrl+Click` / `Cmd+Click` for multi-select).
+- Required field selector with click-to-toggle behavior (click to select, click again to deselect).
+- Live selected-count helper (`Selected: X fields`) below the required-field selector.
 - Manual required field input (comma or newline separated).
 - Progress bar during validation.
 - Validation dashboard:
@@ -204,7 +206,8 @@ Notes:
 - `BidDocuments[]` is normalized to `BidDocuments` when applied.
 - Manual required fields are merged with selected fields.
 - Duplicate field names are removed automatically.
-- You can deselect any field using `Ctrl+Click` / `Cmd+Click` before applying to schema.
+- You can select or deselect any field with a single click before applying to schema.
+- A live `Selected: X fields` helper shows the current selection count.
 
 ## Input JSON Shapes Supported
 
