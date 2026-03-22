@@ -81,7 +81,7 @@ No installation is required.
 
 1. In **Top Errors** or **All Errors**, click any row.
 2. The page auto-scrolls to **Selected Error Record**.
-3. The JSON key causing the validation error is highlighted in the record viewer.
+3. The JSON key causing the validation error is highlighted in the record viewer and automatically brought into view.
 4. Use this to quickly debug what failed in context.
 
 ### 6.1 Understand key highlighting
