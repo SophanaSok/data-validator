@@ -503,12 +503,16 @@ function validateBySchema(value, schema, path, errors, requiredFields) {
 
         const properties = schema.properties || {};
         Object.entries(properties).forEach(([field, childSchema]) => {
+            const fieldIsRequired = required.includes(field);
+            if (!fieldIsRequired) {
+                return;
+            }
+
             if (value[field] === undefined || value[field] === null) {
                 return;
             }
 
-            const fieldIsRequired = required.includes(field);
-            validateBySchema(value[field], childSchema, `${path}/${field}`, errors, fieldIsRequired ? required : []);
+            validateBySchema(value[field], childSchema, `${path}/${field}`, errors, required);
         });
 
         return;
