@@ -85,8 +85,9 @@ The app will load directly in your browser—no installation required.
 
 1. In **Selected Error Record**, look for the legend text: **Highlighted key = field causing the validation error**.
 2. Highlighting follows the error path, including nested keys.
-3. For missing required fields, no key can be highlighted because the key is absent in the JSON object.
-4. In that case, the record summary includes **key missing in record**.
+3. For nested paths that cannot be resolved exactly in the rendered JSON (for example some `BidDocuments[]` nested errors), the viewer now falls back to the nearest parent key so a relevant key is still highlighted.
+4. For missing required fields, no key can be highlighted because the key is absent in the JSON object.
+5. In that case, the record summary includes **key missing in record**.
 
 ### 6.1 Review uncapped errors
 
@@ -160,6 +161,7 @@ High-level flow:
 - Clickable top error rows with full JSON record viewer and automatic scroll to that panel.
 - Clickable all-error rows with the same full-record viewer behavior.
 - Selected record key highlighting for the exact field/path causing each error.
+- Nested-path fallback highlighting that marks the nearest parent key when an exact nested match is not renderable (for example some `BidDocuments[]` errors).
 - In-view legend text explaining highlighted key behavior.
 - Missing-key summary hint for required-field errors when the key does not exist in the record.
 - Export buttons:
