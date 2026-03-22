@@ -565,13 +565,72 @@ function validateBySchema(value, schema, path, errors, requiredFields) {
             }
 
             if (schema.format === 'date-time') {
-                const date = new Date(value);
-                if (Number.isNaN(date.getTime())) {
+                if (!isValidDateTimeValue(value)) {
                     errors.push({ instancePath: path, message: 'must match format "date-time"' });
                 }
             }
         }
     }
+}
+
+function isValidDateTimeValue(value) {
+    if (typeof value !== 'string') {
+        return false;
+    }
+
+    const input = value.trim();
+    if (!input) {
+        return false;
+    }
+
+    // RFC3339-like date-time with timezone (strict)
+    const isoDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+    if (isoDateTime.test(input)) {
+        const parsedIso = new Date(input);
+        return !Number.isNaN(parsedIso.getTime());
+    }
+
+    // Accept ISO date-only and slash-separated date-only forms used in source data.
+    const ymd = input.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (ymd) {
+        return isValidDateParts(Number(ymd[1]), Number(ymd[2]), Number(ymd[3]));
+    }
+
+    const slashDate = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (slashDate) {
+        const first = Number(slashDate[1]);
+        const second = Number(slashDate[2]);
+        const year = Number(slashDate[3]);
+
+        // If one side is >12, disambiguate as D/M or M/D.
+        if (first > 12 && second <= 12) {
+            return isValidDateParts(year, second, first);
+        }
+
+        if (second > 12 && first <= 12) {
+            return isValidDateParts(year, first, second);
+        }
+
+        // Ambiguous dates (e.g., 03/05/2026): accept if either interpretation is valid.
+        return isValidDateParts(year, first, second) || isValidDateParts(year, second, first);
+    }
+
+    return false;
+}
+
+function isValidDateParts(year, month, day) {
+    if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+        return false;
+    }
+
+    if (month < 1 || month > 12 || day < 1 || day > 31) {
+        return false;
+    }
+
+    const utcDate = new Date(Date.UTC(year, month - 1, day));
+    return utcDate.getUTCFullYear() === year
+        && utcDate.getUTCMonth() === month - 1
+        && utcDate.getUTCDate() === day;
 }
 
 function normalizeRequiredFieldName(field) {
