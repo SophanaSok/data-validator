@@ -7,7 +7,7 @@ This app lets you:
 - Apply those required fields directly into the schema.
 - Validate one or many JSON files in a single run.
 - Review pass/fail summaries and top validation errors.
-- Click any top error row to inspect the full JSON record.
+- Click any top error row to inspect the full JSON record (the page auto-scrolls to the record viewer).
 - Export passing records, failing records, and CSV error reports.
 
 ## Quick 60-Second Start
@@ -52,7 +52,7 @@ High-level flow:
   - `Pipeline Ready` when pass rate is at least `95%`
   - `Gate Failed` when pass rate is below `95%`
 - Top errors table (first 50 errors).
-- Clickable top error rows with full JSON record viewer.
+- Clickable top error rows with full JSON record viewer and automatic scroll to that panel.
 - Export buttons:
   - `good-bids.json`
   - `bad-bids.json`
@@ -199,8 +199,9 @@ The app will load directly in your browser—no installation required.
 ### 6. Inspect full record from top errors
 
 1. In **Top Errors**, click any row.
-2. View full JSON in **Selected Error Record**.
-3. Use this to debug exactly what failed in context.
+2. The page auto-scrolls to **Selected Error Record**.
+3. View the full JSON payload for the selected row.
+4. Use this to debug exactly what failed in context.
 
 ### 7. Export outputs
 
@@ -225,7 +226,7 @@ The app will load directly in your browser—no installation required.
 - **Validation Engine Badge**: currently indicates local validation.
 - **Results Panel**: regenerated on each validation run.
 - **Top Errors Table**:
-  - Click row to load record detail panel.
+  - Click row to load record detail panel and auto-scroll to it.
   - Keyboard accessible with `Tab`, `Enter`, or `Space`.
 
 ## Troubleshooting
