@@ -8,6 +8,7 @@ This app lets you:
 - Validate one or many JSON files in a single run.
 - Review pass/fail summaries and top validation errors.
 - Click any top error row to inspect the full JSON record (the page auto-scrolls to the record viewer).
+- Expand a collapsed **All Errors** section to review every error row (not capped).
 - Export passing records, failing records, and CSV error reports.
 
 ## Quick 60-Second Start
@@ -18,7 +19,8 @@ This app lets you:
 4. Click **Validate Batch**.
 5. Review pass rate and gate status.
 6. Click a row in **Top Errors** to inspect the full JSON record.
-7. Download `good-bids.json`, `bad-bids.json`, or `errors.csv`.
+7. Expand **All Errors** when you need the uncapped full error list.
+8. Download `good-bids.json`, `bad-bids.json`, or `errors.csv`.
 
 ## How To Use The App
 
@@ -79,6 +81,12 @@ The app will load directly in your browser—no installation required.
 3. View the full JSON payload for the selected row.
 4. Use this to debug exactly what failed in context.
 
+### 6.1 Review uncapped errors
+
+1. Expand **All Errors** in the results panel.
+2. This table contains every error row found in the batch (not limited to 50 rows).
+3. Click any row to load the full JSON record in **Selected Error Record**.
+
 ### 7. Export outputs
 
 - **Good Records JSON**: all passing records.
@@ -104,6 +112,10 @@ The app will load directly in your browser—no installation required.
 - **Top Errors Table**:
   - Click row to load record detail panel and auto-scroll to it.
   - Keyboard accessible with `Tab`, `Enter`, or `Space`.
+- **All Errors Panel**:
+  - Collapsed by default.
+  - Expand to see every error row (uncapped).
+  - Clickable rows behave the same as Top Errors.
 
 ## What The App Does
 
@@ -117,7 +129,7 @@ High-level flow:
    - Good records
    - Bad records
    - Error details per failing field
-5. The app shows a summary, top errors, and download buttons.
+5. The app shows a summary, Top Errors (first 50), All Errors (uncapped, collapsed by default), and download buttons.
 
 ## Current Features
 
@@ -137,7 +149,9 @@ High-level flow:
   - `Pipeline Ready` when pass rate is at least `95%`
   - `Gate Failed` when pass rate is below `95%`
 - Top errors table (first 50 errors).
+- Collapsible **All Errors** table containing every error row (uncapped).
 - Clickable top error rows with full JSON record viewer and automatic scroll to that panel.
+- Clickable all-error rows with the same full-record viewer behavior.
 - Export buttons:
   - `good-bids.json`
   - `bad-bids.json`
@@ -220,6 +234,8 @@ Supported checks from the schema:
 - `format: date-time` (checked for required string fields)
 
 Important behavior details:
+- The validator checks only fields included in `schema.required` at each object level.
+- Optional (non-required) fields are ignored even when present in data.
 - Empty values are treated as missing for required checks when value is:
   - `undefined`
   - `null`
@@ -227,7 +243,12 @@ Important behavior details:
   - empty array
 - Invalid JSON files are skipped silently during batch parse.
 - Top error table shows first 50 errors only.
-- Full error data is still available in downloads.
+- The **All Errors** panel shows the uncapped full list in the UI.
+- Full error data is also available in downloads.
+- `date-time` accepts:
+  - Strict ISO datetime with timezone (for example `2026-03-05T14:30:00Z`)
+  - ISO date-only (`2026-03-05`)
+  - Slash date-only (`03/05/2026`, including ambiguous month/day forms)
 
 ## Troubleshooting
 
@@ -285,6 +306,15 @@ Fix:
 - Ensure those fields are required if you want strict checks.
 - Or update validator logic in `script.js` to enforce formats for optional fields too.
 
+### BidDocuments errors appear when not selected
+
+Cause:
+- The schema likely still marks `BidDocuments` as required.
+
+Fix:
+- Deselect `BidDocuments[]` in required fields and click **Apply to Schema** again.
+- Confirm `BidDocuments` is not listed under `schema.properties.Export.items.required`.
+
 ### Top error row click does nothing
 
 Cause:
@@ -311,7 +341,7 @@ Fix:
 ## Known Limitations
 
 - Validation focuses on a subset of JSON Schema behavior.
-- Top errors panel is capped at 50 rows for readability.
+- Top errors panel is capped at 50 rows for readability (use **All Errors** for uncapped rows).
 - Invalid JSON files are skipped without detailed per-file parse messaging.
 
 ## License
