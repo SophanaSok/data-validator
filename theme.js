@@ -10,6 +10,7 @@
     let mediaQuery = null;
     let activeMode = 'system';
     let activeButton = null;
+    let isStorageListenerBound = false;
 
     function ensureDefaultMode() {
         if (!localStorage.getItem(STORAGE_KEY)) {
@@ -61,25 +62,35 @@
         }
     }
 
-    function init(button) {
-        activeButton = button || null;
-        ensureDefaultMode();
-        applyMode(getStoredMode());
-
-        if (activeButton) {
-            activeButton.addEventListener('click', cycleMode);
-        }
-
+    function ensureThemeListeners() {
         if (!mediaQuery) {
             mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
             mediaQuery.addEventListener('change', handleSystemThemeChange);
         }
 
-        window.addEventListener('storage', e => {
-            if (e.key === STORAGE_KEY) {
-                applyMode(getStoredMode());
-            }
-        });
+        if (!isStorageListenerBound) {
+            window.addEventListener('storage', e => {
+                if (e.key === STORAGE_KEY) {
+                    applyMode(getStoredMode());
+                }
+            });
+            isStorageListenerBound = true;
+        }
+    }
+
+    function initializeTheme() {
+        ensureDefaultMode();
+        applyMode(getStoredMode());
+        ensureThemeListeners();
+    }
+
+    function init(button) {
+        activeButton = button || null;
+        initializeTheme();
+
+        if (activeButton) {
+            activeButton.addEventListener('click', cycleMode);
+        }
 
         return {
             get mode() {
@@ -98,4 +109,7 @@
         applyMode,
         getCurrentMode: () => activeMode
     };
+
+    // Apply the persisted or system-derived theme immediately on script load.
+    initializeTheme();
 })();
