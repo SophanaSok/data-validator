@@ -90,6 +90,7 @@ h1 {
 }
 
 .engine-badge {
+    position: relative;
     display: inline-flex;
     align-items: center;
     padding: 6px 10px;
@@ -100,6 +101,41 @@ h1 {
     font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: 0.01em;
+    cursor: help;
+}
+
+.engine-badge::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    transform: translateX(-50%) translateY(4px);
+    width: 250px;
+    max-width: min(250px, 78vw);
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    font-size: 0.76rem;
+    font-weight: 500;
+    line-height: 1.35;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 20;
+}
+
+.engine-badge:hover::after,
+.engine-badge:focus-visible::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.engine-badge:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
 }
 
 button.theme-toggle {
