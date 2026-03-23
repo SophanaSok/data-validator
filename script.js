@@ -492,14 +492,6 @@ function togglePerFileBreakdownPanel(statType) {
         return;
     }
 
-    const activeType = panel.dataset.activeType || '';
-    if (!panel.hidden && activeType === statType) {
-        panel.hidden = true;
-        panel.dataset.activeType = '';
-        body.innerHTML = '';
-        return;
-    }
-
     const fileBreakdown = statBreakdownState.errorsByFile || {};
     const files = statBreakdownState.files || [];
     if (!files.length) {
