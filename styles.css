@@ -645,6 +645,47 @@ tbody tr:nth-child(even) {
     transition: width 0.3s;
 }
 
+.app-notice {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 200;
+    max-width: min(420px, calc(100vw - 2rem));
+    padding: 0.72rem 0.9rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.35;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.app-notice.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.app-notice-success {
+    border-color: color-mix(in srgb, var(--success) 62%, var(--border));
+    background: color-mix(in srgb, var(--success) 12%, var(--card));
+}
+
+.app-notice-warning {
+    border-color: color-mix(in srgb, #f2a22f 62%, var(--border));
+    background: color-mix(in srgb, #f2a22f 14%, var(--card));
+}
+
+.app-notice-error {
+    border-color: color-mix(in srgb, var(--danger) 62%, var(--border));
+    background: color-mix(in srgb, var(--danger) 14%, var(--card));
+}
+
 @media (max-width: 768px) {
     body {
         padding: 1rem;
@@ -699,6 +740,12 @@ tbody tr:nth-child(even) {
 
     .results-side-nav-title {
         display: none;
+    }
+
+    .app-notice {
+        right: 0.75rem;
+        left: 0.75rem;
+        max-width: none;
     }
 }
 

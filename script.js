@@ -3,6 +3,7 @@ let ui = null;
 let lastValidationData = { good: [], bad: [], errors: [] };
 let topErrorsPreview = [];
 let allErrorsPreview = [];
+let appNoticeTimeoutId = null;
 
 document.addEventListener('DOMContentLoaded', initApp);
 
@@ -259,6 +260,36 @@ function escapeHTML(value) {
         .replaceAll("'", '&#39;');
 }
 
+function ensureAppNoticeElement() {
+    let notice = document.getElementById('appNotice');
+    if (notice) {
+        return notice;
+    }
+
+    notice = document.createElement('div');
+    notice.id = 'appNotice';
+    notice.className = 'app-notice';
+    notice.setAttribute('role', 'status');
+    notice.setAttribute('aria-live', 'polite');
+    notice.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(notice);
+    return notice;
+}
+
+function showAppNotice(message, type = 'info') {
+    const notice = ensureAppNoticeElement();
+    notice.textContent = message;
+    notice.className = `app-notice app-notice-${type} is-visible`;
+
+    if (appNoticeTimeoutId) {
+        clearTimeout(appNoticeTimeoutId);
+    }
+
+    appNoticeTimeoutId = setTimeout(() => {
+        notice.classList.remove('is-visible');
+    }, 2600);
+}
+
 function setSelectedFiles(files) {
     selectedFiles = Array.from(files || []);
     if (ui && ui.fileDrop) {
@@ -511,19 +542,26 @@ function updateSchema() {
 
     const requiredFields = Array.from(new Set([...selected, ...manual]));
     if (!requiredFields.length) {
-        alert('Select required fields');
+        showAppNotice('Select required fields before applying to schema.', 'warning');
         return;
     }
 
-    const schema = JSON.parse(schemaElement.value);
+    let schema;
+    try {
+        schema = JSON.parse(schemaElement.value);
+    } catch {
+        showAppNotice('Schema JSON is invalid. Fix it and try again.', 'error');
+        return;
+    }
+
     if (!schema.properties || !schema.properties.Export || !schema.properties.Export.items) {
-        alert('Schema must include properties.Export.items');
+        showAppNotice('Schema must include properties.Export.items.', 'error');
         return;
     }
 
     schema.properties.Export.items.required = requiredFields;
     schemaElement.value = JSON.stringify(schema, null, 2);
-    alert(`✅ Set ${requiredFields.length} required fields`);
+    showAppNotice(`Applied ${requiredFields.length} required fields to schema.`, 'success');
 }
 
 function unwrap(data) {
@@ -550,13 +588,13 @@ async function validateFiles() {
     try {
         schema = JSON.parse(schemaText);
     } catch {
-        alert('Invalid schema');
+        showAppNotice('Invalid schema JSON. Fix it and validate again.', 'error');
         return;
     }
 
     const files = selectedFiles.length ? selectedFiles : Array.from((ui.fileInput && ui.fileInput.files) || []);
     if (!files.length) {
-        alert('Load JSON files');
+        showAppNotice('Load one or more JSON files before validating.', 'warning');
         return;
     }
 
@@ -566,7 +604,7 @@ async function validateFiles() {
     const itemSchema = schema && schema.properties && schema.properties.Export && schema.properties.Export.items;
     if (!itemSchema) {
         ui.progress.style.display = 'none';
-        alert('Schema must include properties.Export.items');
+        showAppNotice('Schema must include properties.Export.items.', 'error');
         return;
     }
 
