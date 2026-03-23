@@ -4,6 +4,10 @@ let lastValidationData = { good: [], bad: [], errors: [] };
 let topErrorsPreview = [];
 let allErrorsPreview = [];
 let appNoticeTimeoutId = null;
+let errorSortState = {
+    top: { key: null, direction: 'asc' },
+    all: { key: null, direction: 'asc' }
+};
 
 document.addEventListener('DOMContentLoaded', initApp);
 
@@ -114,9 +118,17 @@ function bindUIEvents() {
     }
 
     if (ui.results) {
+        ui.results.addEventListener('click', handleErrorSortHeaderClick);
         ui.results.addEventListener('click', handleTopErrorRowClick);
         ui.results.addEventListener('change', handleErrorFieldFilterChange);
         ui.results.addEventListener('keydown', e => {
+            const sortHeader = e.target.closest('.sortable-header');
+            if (sortHeader && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                sortHeader.click();
+                return;
+            }
+
             const row = e.target.closest('.error-row');
             if (!row) {
                 return;
@@ -223,16 +235,115 @@ function applyErrorFieldFilter(source, selectedField) {
     const sourceKey = source === 'all' ? 'all' : 'top';
     const sourceErrors = sourceKey === 'all' ? allErrorsPreview : topErrorsPreview;
     const filteredEntries = filterErrorsByField(sourceErrors, selectedField);
+    const sortedEntries = sortErrorEntries(filteredEntries, sourceKey);
 
     const tableBody = ui.results.querySelector(sourceKey === 'all' ? '#allErrorsBody' : '#topErrorsBody');
     if (tableBody) {
-        tableBody.innerHTML = renderErrorRowsForTable(filteredEntries, sourceKey);
+        tableBody.innerHTML = renderErrorRowsForTable(sortedEntries, sourceKey);
+    }
+
+    const tableHead = ui.results.querySelector(sourceKey === 'all' ? '#allErrorsHead' : '#topErrorsHead');
+    if (tableHead) {
+        tableHead.innerHTML = renderErrorTableHead(sourceKey);
     }
 
     const countText = `${filteredEntries.length} of ${sourceErrors.length}`;
     const countTarget = ui.results.querySelector(sourceKey === 'all' ? '#allErrorsCount' : '#topErrorsCount');
     if (countTarget) {
         countTarget.textContent = countText;
+    }
+}
+
+function handleErrorSortHeaderClick(e) {
+    const header = e.target.closest('.sortable-header');
+    if (!header || !ui || !ui.results) {
+        return;
+    }
+
+    const source = header.dataset.sortSource === 'all' ? 'all' : 'top';
+    const sortKey = header.dataset.sortKey;
+    if (!sortKey) {
+        return;
+    }
+
+    const state = errorSortState[source];
+    if (state.key === sortKey) {
+        state.direction = state.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        state.key = sortKey;
+        state.direction = 'asc';
+    }
+
+    const filterElement = ui.results.querySelector(source === 'all' ? '#allErrorFieldFilter' : '#topErrorFieldFilter');
+    const selectedField = filterElement ? filterElement.value : '';
+    applyErrorFieldFilter(source, selectedField);
+}
+
+function renderErrorTableHead(source) {
+    const sourceKey = source === 'all' ? 'all' : 'top';
+    const state = errorSortState[sourceKey];
+    const columns = [
+        { key: 'file', label: 'File' },
+        { key: 'index', label: 'Record #' },
+        { key: 'field', label: 'Field' },
+        { key: 'value', label: 'Value' },
+        { key: 'message', label: 'Error' }
+    ];
+
+    return `<tr>${columns
+        .map(column => {
+            const isActive = state.key === column.key;
+            const ariaSort = isActive ? (state.direction === 'asc' ? 'ascending' : 'descending') : 'none';
+            const indicator = isActive ? (state.direction === 'asc' ? ' ▲' : ' ▼') : '';
+
+            return `<th scope="col" class="sortable-header${isActive ? ' is-sorted' : ''}" data-sort-source="${sourceKey}" data-sort-key="${column.key}" aria-sort="${ariaSort}" tabindex="0" role="button">${column.label}${indicator}</th>`;
+        })
+        .join('')}</tr>`;
+}
+
+function sortErrorEntries(entries, source) {
+    const sourceKey = source === 'all' ? 'all' : 'top';
+    const state = errorSortState[sourceKey];
+    if (!state || !state.key) {
+        return entries;
+    }
+
+    const directionMultiplier = state.direction === 'asc' ? 1 : -1;
+    return [...entries].sort((left, right) => {
+        const leftValue = getSortableErrorValue(left.error, state.key);
+        const rightValue = getSortableErrorValue(right.error, state.key);
+
+        if (state.key === 'index') {
+            return (Number(leftValue) - Number(rightValue)) * directionMultiplier;
+        }
+
+        const compared = String(leftValue).localeCompare(String(rightValue), undefined, {
+            numeric: true,
+            sensitivity: 'base'
+        });
+
+        if (compared !== 0) {
+            return compared * directionMultiplier;
+        }
+
+        return (left.index - right.index) * directionMultiplier;
+    });
+}
+
+function getSortableErrorValue(error, key) {
+    switch (key) {
+        case 'file':
+            return error.file || '';
+        case 'index':
+            return Number(error.index) || 0;
+        case 'field':
+            return error.field || '';
+        case 'value':
+            return formatFieldValue(error.value);
+        case 'message':
+            return error.message || '';
+        default:
+            return '';
     }
 }
 
@@ -692,6 +803,10 @@ async function validateFiles() {
 
     topErrorsPreview = allErrors.slice(0, 50);
     allErrorsPreview = allErrors;
+    errorSortState = {
+        top: { key: null, direction: 'asc' },
+        all: { key: null, direction: 'asc' }
+    };
 
     const topFieldOptions = buildErrorFieldFilterOptions(topErrorsPreview);
     const allFieldOptions = buildErrorFieldFilterOptions(allErrorsPreview);
@@ -745,8 +860,8 @@ async function validateFiles() {
                             <span id="topErrorsCount" class="error-filter-count">${topErrorsPreview.length} of ${topErrorsPreview.length}</span>
                         </div>
                         <table>
-                            <thead>
-                                <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
+                            <thead id="topErrorsHead">
+                                ${renderErrorTableHead('top')}
                             </thead>
                             <tbody id="topErrorsBody">
                             ${renderErrorRowsForTable(filterErrorsByField(topErrorsPreview, ''), 'top')}
@@ -768,8 +883,8 @@ async function validateFiles() {
                         </div>
                         <div class="all-errors-table-wrap">
                             <table>
-                                <thead>
-                                    <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
+                                <thead id="allErrorsHead">
+                                    ${renderErrorTableHead('all')}
                                 </thead>
                                 <tbody id="allErrorsBody">
                                 ${renderErrorRowsForTable(filterErrorsByField(allErrorsPreview, ''), 'all')}

@@ -481,6 +481,24 @@ th {
     font-weight: 600;
 }
 
+.sortable-header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.sortable-header:hover {
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+}
+
+.sortable-header:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.sortable-header.is-sorted {
+    color: color-mix(in srgb, var(--accent) 76%, var(--text));
+}
+
 tr:hover {
     background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
