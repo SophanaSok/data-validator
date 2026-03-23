@@ -487,11 +487,14 @@ textarea:focus-visible,
     background: var(--text);
     color: var(--bg);
     font-size: 0.8rem;
-    white-space: nowrap;
+    max-width: 250px;
+    white-space: pre-wrap;
+    word-break: break-word;
     z-index: 100;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     pointer-events: none;
     font-family: monospace;
+    line-height: 1.4;
 }
 
 .stat-tooltip::after {
