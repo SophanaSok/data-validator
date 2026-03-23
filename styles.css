@@ -647,28 +647,31 @@ tbody tr:nth-child(even) {
 
 .app-notice {
     position: fixed;
-    right: 1rem;
-    bottom: 1rem;
+    top: 1rem;
+    left: 50%;
     z-index: 200;
-    max-width: min(420px, calc(100vw - 2rem));
-    padding: 0.72rem 0.9rem;
+    width: min(560px, calc(100vw - 2rem));
+    padding: 0.78rem 0.95rem;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
     background: var(--card);
     color: var(--text);
-    box-shadow: var(--shadow);
-    font-size: 0.88rem;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
+    font-size: 0.9rem;
     font-weight: 600;
     line-height: 1.35;
     opacity: 0;
-    transform: translateY(8px);
+    transform: translate(-50%, -8px);
     pointer-events: none;
-    transition: opacity 0.16s ease, transform 0.16s ease;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    border-left-width: 4px;
+    backdrop-filter: blur(6px);
 }
 
 .app-notice.is-visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, 0);
+    animation: noticePulse 0.45s ease;
 }
 
 .app-notice-success {
@@ -684,6 +687,15 @@ tbody tr:nth-child(even) {
 .app-notice-error {
     border-color: color-mix(in srgb, var(--danger) 62%, var(--border));
     background: color-mix(in srgb, var(--danger) 14%, var(--card));
+}
+
+@keyframes noticePulse {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 24%, transparent), 0 14px 32px rgba(15, 23, 42, 0.16);
+    }
+    100% {
+        box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 0%, transparent), 0 14px 32px rgba(15, 23, 42, 0.16);
+    }
 }
 
 @media (max-width: 768px) {
@@ -743,9 +755,9 @@ tbody tr:nth-child(even) {
     }
 
     .app-notice {
-        right: 0.75rem;
-        left: 0.75rem;
-        max-width: none;
+        top: 0.75rem;
+        left: 50%;
+        width: calc(100vw - 1.5rem);
     }
 }
 

@@ -278,6 +278,10 @@ function ensureAppNoticeElement() {
 
 function showAppNotice(message, type = 'info') {
     const notice = ensureAppNoticeElement();
+    const isAssertive = type === 'warning' || type === 'error';
+
+    notice.setAttribute('role', isAssertive ? 'alert' : 'status');
+    notice.setAttribute('aria-live', isAssertive ? 'assertive' : 'polite');
     notice.textContent = message;
     notice.className = `app-notice app-notice-${type} is-visible`;
 
@@ -287,7 +291,7 @@ function showAppNotice(message, type = 'info') {
 
     appNoticeTimeoutId = setTimeout(() => {
         notice.classList.remove('is-visible');
-    }, 2600);
+    }, 3600);
 }
 
 function setSelectedFiles(files) {
