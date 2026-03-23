@@ -672,23 +672,25 @@ async function validateFiles() {
                 </div>
 
                 <div id="resultsTopErrors" class="card">
-                    <h3>🔥 Top Errors</h3>
-                    <div class="error-filter-row">
-                        <label for="topErrorFieldFilter">Filter by field</label>
-                        <select id="topErrorFieldFilter" class="error-field-filter" data-filter-source="top">
-                            ${topFieldOptions}
-                        </select>
-                        <span id="topErrorsCount" class="error-filter-count">${topErrorsPreview.length} of ${topErrorsPreview.length}</span>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
-                        </thead>
-                        <tbody id="topErrorsBody">
-                        ${renderErrorRowsForTable(filterErrorsByField(topErrorsPreview, ''), 'top')}
-                        </tbody>
-                    </table>
-                    <p class="error-row-hint">Click any error row to view the full JSON record.</p>
+                    <details class="all-errors-panel">
+                        <summary>🔥 Top Errors (${topErrorsPreview.length})</summary>
+                        <p class="error-row-hint">Click any error row to view the full JSON record.</p>
+                        <div class="error-filter-row">
+                            <label for="topErrorFieldFilter">Filter by field</label>
+                            <select id="topErrorFieldFilter" class="error-field-filter" data-filter-source="top">
+                                ${topFieldOptions}
+                            </select>
+                            <span id="topErrorsCount" class="error-filter-count">${topErrorsPreview.length} of ${topErrorsPreview.length}</span>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
+                            </thead>
+                            <tbody id="topErrorsBody">
+                            ${renderErrorRowsForTable(filterErrorsByField(topErrorsPreview, ''), 'top')}
+                            </tbody>
+                        </table>
+                    </details>
                 </div>
 
                 <div id="resultsAllErrors" class="card">
