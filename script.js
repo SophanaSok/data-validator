@@ -392,6 +392,69 @@ function buildPerFileBreakdown(errors, allErrors) {
     return { breakdown: sorted, total: errors.length };
 }
 
+function getErrorSeverityType(errorMessage) {
+    const msg = String(errorMessage || '').toLowerCase();
+    
+    if (msg.includes('is required')) {
+        return 'Required';
+    }
+    
+    if (msg.includes('must be') && (msg.includes('object') || msg.includes('array') || msg.includes('string'))) {
+        return 'Type Mismatch';
+    }
+    
+    return 'Validation Failed';
+}
+
+function buildErrorSeverityBreakdown(errors) {
+    const severityCounts = {
+        'Required': 0,
+        'Type Mismatch': 0,
+        'Validation Failed': 0
+    };
+
+    (errors || []).forEach(err => {
+        const severity = getErrorSeverityType(err.message);
+        severityCounts[severity]++;
+    });
+
+    return Object.entries(severityCounts)
+        .map(([severity, count]) => ({ severity, count, percent: ((count / errors.length) * 100).toFixed(1) }))
+        .filter(item => item.count > 0)
+        .sort((a, b) => b.count - a.count);
+}
+
+function buildPerFilePassRates(good, bad, files) {
+    const fileBreakdown = {};
+    
+    files.forEach(file => {
+        fileBreakdown[file.name] = {
+            good: 0,
+            bad: 0,
+            total: 0,
+            passRate: 0
+        };
+    });
+
+    // Note: good and bad arrays contain records, but we need to infer file from errors
+    // This is a simplified approach - in practice, you'd track file per record during validation
+    // For now, we'll build from the statBreakdownState if available
+    if (statBreakdownState.errorsByFile && Object.keys(statBreakdownState.errorsByFile).length > 0) {
+        Object.entries(statBreakdownState.errorsByFile).forEach(([file, data]) => {
+            fileBreakdown[file] = {
+                good: data.good || 0,
+                bad: data.bad || 0,
+                total: data.total || 0,
+                passRate: data.total > 0 ? ((data.good / data.total) * 100).toFixed(1) : 0
+            };
+        });
+    }
+
+    return Object.entries(fileBreakdown)
+        .map(([file, data]) => ({ file, ...data }))
+        .sort((a, b) => a.passRate - b.passRate);
+}
+
 function handleStatClick(e) {
     const stat = e.target.closest('.stat');
     if (!stat || !ui || !ui.results) {
@@ -409,6 +472,10 @@ function handleStatClick(e) {
         filterErrorsByBadRecords();
     } else if (statType.includes('error') && statType.includes('found')) {
         showErrorFieldBreakdown();
+    } else if (statType.includes('pass rate')) {
+        showPassRateBreakdown();
+    } else if (statType.includes('error severity')) {
+        showErrorSeverityBreakdown();
     }
 }
 
@@ -452,6 +519,13 @@ function handleStatHover(e) {
             file: f,
             count: fileBreakdown[f]?.errors || 0
         })));
+    } else if (statType.includes('error severity')) {
+        const severityBreakdown = buildErrorSeverityBreakdown(allErrorsPreview);
+        const lines = ['Error Types', '---'];
+        severityBreakdown.forEach(item => {
+            lines.push(`${item.severity}: ${item.count} (${item.percent}%)`);
+        });
+        tooltipContent = lines.join('\n');
     }
 
     if (tooltipContent) {
@@ -608,6 +682,144 @@ function filterAllErrorsByField(field) {
                 allErrorsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
         }
+    }
+}
+
+function showPassRateBreakdown() {
+    if (!ui || !ui.results) {
+        return;
+    }
+
+    const passRates = buildPerFilePassRates(lastValidationData.good, lastValidationData.bad, selectedFiles);
+    if (passRates.length === 0) {
+        return;
+    }
+
+    let existingModal = document.getElementById('passRateModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'passRateModal';
+    modal.className = 'field-breakdown-modal';
+    modal.innerHTML = `
+        <div class="field-breakdown-content">
+            <button class="field-breakdown-close" aria-label="Close pass rate breakdown">&times;</button>
+            <h3>Pass Rate by File</h3>
+            <div class="field-breakdown-list">
+                ${passRates.map(item => `
+                    <div class="field-breakdown-item" style="cursor: default;">
+                        <span class="field-name">${escapeHTML(item.file)}</span>
+                        <span class="field-stats">
+                            <span class="field-count">${item.good}/${item.total}</span>
+                            <span class="field-percent">${item.passRate}%</span>
+                        </span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeBtn = modal.querySelector('.field-breakdown-close');
+    closeBtn.addEventListener('click', () => modal.remove());
+
+    modal.addEventListener('click', e => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+function showErrorSeverityBreakdown() {
+    if (!ui || !ui.results) {
+        return;
+    }
+
+    const severityBreakdown = buildErrorSeverityBreakdown(allErrorsPreview);
+    if (severityBreakdown.length === 0) {
+        return;
+    }
+
+    let existingModal = document.getElementById('severityBreakdownModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'severityBreakdownModal';
+    modal.className = 'field-breakdown-modal';
+    modal.innerHTML = `
+        <div class="field-breakdown-content">
+            <button class="field-breakdown-close" aria-label="Close severity breakdown">&times;</button>
+            <h3>Errors by Type</h3>
+            <div class="field-breakdown-list">
+                ${severityBreakdown.map(item => `
+                    <div class="field-breakdown-item" data-severity="${escapeHTML(item.severity)}">
+                        <span class="field-name">${escapeHTML(item.severity)}</span>
+                        <span class="field-stats">
+                            <span class="field-count">${item.count}</span>
+                            <span class="field-percent">${item.percent}%</span>
+                        </span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeBtn = modal.querySelector('.field-breakdown-close');
+    closeBtn.addEventListener('click', () => modal.remove());
+
+    const items = modal.querySelectorAll('.field-breakdown-item');
+    items.forEach(item => {
+        item.addEventListener('click', () => {
+            const severity = item.dataset.severity;
+            modal.remove();
+            filterAllErrorsBySeverity(severity);
+        });
+    });
+
+    modal.addEventListener('click', e => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+function filterAllErrorsBySeverity(severity) {
+    if (!ui || !ui.results) {
+        return;
+    }
+
+    const severityErrors = allErrorsPreview.filter(err => getErrorSeverityType(err.message) === severity);
+    if (severityErrors.length === 0) {
+        showAppNotice(`No errors of type "${severity}" found.`, 'info');
+        return;
+    }
+
+    const allErrorsPanel = ui.results.querySelector('#resultsAllErrors');
+    if (allErrorsPanel) {
+        const details = allErrorsPanel.querySelector('details');
+        if (details && !details.open) {
+            details.open = true;
+        }
+
+        const tableBody = ui.results.querySelector('#allErrorsBody');
+        if (tableBody) {
+            const entries = severityErrors.map((error, index) => ({ error, index }));
+            const sortedEntries = sortErrorEntries(entries, 'all');
+            tableBody.innerHTML = renderErrorRowsForTable(sortedEntries, 'all');
+        }
+
+        setTimeout(() => {
+            allErrorsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+
+        showAppNotice(`Filtered to ${severityErrors.length} ${severity.toLowerCase()} errors.`, 'info');
     }
 }
 
@@ -1121,6 +1333,11 @@ async function validateFiles() {
     const topFieldOptions = buildErrorFieldFilterOptions(topErrorsPreview);
     const allFieldOptions = buildErrorFieldFilterOptions(allErrorsPreview);
 
+    // Build error severity breakdown for display
+    const severityBreakdown = buildErrorSeverityBreakdown(allErrorsPreview);
+    const mostCommonSeverity = severityBreakdown.length > 0 ? severityBreakdown[0].severity : 'N/A';
+    const mostCommonSeverityCount = severityBreakdown.length > 0 ? severityBreakdown[0].count : 0;
+
     ui.results.innerHTML = `
         <div class="results-layout">
             <aside class="results-side-nav" aria-label="Validation results navigation">
@@ -1150,6 +1367,10 @@ async function validateFiles() {
                     <div class="stat" role="button" tabindex="0" data-stat-type="errors-found">
                         <h3>${allErrors.length}</h3>
                         <p>Errors Found</p>
+                    </div>
+                    <div class="stat" role="button" tabindex="0" data-stat-type="error-severity">
+                        <h3>${mostCommonSeverityCount}</h3>
+                        <p>Error Severity: ${mostCommonSeverity}</p>
                     </div>
                 </section>
 
