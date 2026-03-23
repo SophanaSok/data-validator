@@ -10,6 +10,8 @@ Use it to:
 - Use a side navigation in generated results to quickly jump between sections.
 - Filter both **Top Errors** and **All Errors** by field.
 - Sort both **Top Errors** and **All Errors** by clicking column headers.
+- Click summary stat cards to open detailed insights (per-file pass/good/bad breakdowns).
+- Click **Top Error Fields** chips to quickly filter the **All Errors** table.
 - Click any top error row to inspect the full JSON record (the page auto-scrolls to the record viewer).
 - Expand collapsed **Top Errors** and **All Errors** sections to review rows.
 - Inspect selected records with JSON syntax highlighting plus field-key highlighting.
@@ -24,8 +26,10 @@ Use it to:
 5. Review pass rate and gate status.
 6. Optionally filter **Top Errors** or **All Errors** by field.
 7. Optionally sort either table by clicking a column header (click again to reverse direction).
-8. Click a row in **Top Errors** or **All Errors** to inspect the full JSON record.
-9. Download `good-bids.json`, `bad-bids.json`, or `errors.csv`.
+8. Click **Pass Rate**, **Good Records**, or **Bad Records** to open per-file insights in the summary panel.
+9. Optionally click a **Top Error Fields** chip to filter **All Errors** by that field.
+10. Click a row in **Top Errors** or **All Errors** to inspect the full JSON record.
+11. Download `good-bids.json`, `bad-bids.json`, or `errors.csv`.
 
 ## How To Use The App
 
@@ -111,6 +115,14 @@ No installation is required.
 2. Success notifications are subtle and auto-dismiss.
 3. Warning/error notifications stay visible longer and are announced with higher accessibility priority.
 
+### 6.4 Use summary insights
+
+1. In the summary area, click **Pass Rate**, **Good Records**, or **Bad Records** to open a detailed per-file insights panel.
+2. The insights panel remains open until you close it with the **Close** button.
+3. Click **Errors Found** to open a field distribution modal.
+4. Click **Error Severity** to open error-type distribution and filter by type.
+5. Use the **Top Error Fields** chips to jump directly to filtered **All Errors** results.
+
 ### 7. Export outputs
 
 - **Good Records JSON**: all passing records.
@@ -137,6 +149,13 @@ No installation is required.
 - **Validation Engine Badge**: includes a hover/focus tooltip explaining validation runs locally in-browser.
 - **Results Panel**: regenerated on each validation run.
 - **Results Side Navigation**: appears after validation and provides jump links to each generated section.
+- **Summary Stats**:
+  - **Pass Rate**, **Good Records**, and **Bad Records** are clickable and open per-file insights in an inline details panel.
+  - Stats use a lightweight click animation to confirm interaction.
+  - Details remain visible until closed with the panel close button.
+- **Top Error Fields Insights**:
+  - Shows top error-prone fields with count and percentage.
+  - Clicking a field chip filters the **All Errors** table to that field.
 - **Top Errors Panel**:
   - Collapsed by default.
   - Optional field filter for narrowing rows by error field.
@@ -183,6 +202,9 @@ High-level flow:
   - Good records count
   - Bad records count
   - Total errors
+- Clickable summary insights panel for per-file breakdowns of pass rate, good records, and bad records.
+- Error severity insight card with modal breakdown and type-based filtering.
+- Top error fields insight chips with one-click filtering into **All Errors**.
 - Pipeline gate status:
   - `Pipeline Ready` when pass rate is at least `95%`
   - `Gate Failed` when pass rate is below `95%`
