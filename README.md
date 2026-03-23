@@ -8,12 +8,12 @@ Use it to:
 - Validate one or many JSON files in a single run.
 - Review pass/fail summaries and top validation errors.
 - Use a side navigation in generated results to quickly jump between sections.
-- Filter both **Top Errors** and **All Errors** by field.
-- Sort both **Top Errors** and **All Errors** by clicking column headers.
+- Filter **All Errors** by field.
+- Sort **All Errors** by clicking column headers.
 - Click summary stat cards to open detailed insights (per-file pass/good/bad breakdowns).
 - Click **Top Error Fields** chips to quickly filter the **All Errors** table.
-- Click any top error row to inspect the full JSON record (the page auto-scrolls to the record viewer).
-- Expand collapsed **Top Errors** and **All Errors** sections to review rows.
+- Click any error row to inspect the full JSON record (the page auto-scrolls to the record viewer).
+- Expand collapsed **All Errors** section to review rows.
 - Inspect selected records with JSON syntax highlighting plus field-key highlighting.
 - Export passing records, failing records, and CSV error reports.
 
@@ -24,11 +24,11 @@ Use it to:
 3. Drag one or more JSON files into the drop zone.
 4. Click **Validate Batch**.
 5. Review pass rate and gate status.
-6. Optionally filter **Top Errors** or **All Errors** by field.
-7. Optionally sort either table by clicking a column header (click again to reverse direction).
+6. Optionally filter **All Errors** by field.
+7. Optionally sort the table by clicking a column header (click again to reverse direction).
 8. Click **Pass Rate**, **Good Records**, or **Bad Records** to open per-file insights in the summary panel.
 9. Optionally click a **Top Error Fields** chip to filter **All Errors** by that field.
-10. Click a row in **Top Errors** or **All Errors** to inspect the full JSON record.
+10. Click a row in **All Errors** to inspect the full JSON record.
 11. Download `good-bids.json`, `bad-bids.json`, or `errors.csv`.
 
 ## How To Use The App
@@ -84,11 +84,11 @@ No installation is required.
 - Click **Validate Batch**.
 - Wait for progress to complete.
 - The page auto-scrolls to generated results and the side navigation appears.
-- Review pass rate, gate status, and top errors.
+- Review pass rate, gate status, and all errors.
 
 ### 6. Inspect full record from error tables
 
-1. In **Top Errors** or **All Errors**, click any row.
+1. In **All Errors**, click any row.
 2. The page auto-scrolls to **Selected Error Record**.
 3. The JSON key causing the validation error is highlighted in the record viewer and automatically brought into view.
 4. JSON is syntax highlighted (keys, strings, numbers, booleans, and null) to improve readability.
@@ -104,7 +104,7 @@ No installation is required.
 
 ### 6.2 Review uncapped errors
 
-1. Expand **Top Errors** and/or **All Errors** in the results panel.
+1. Expand **All Errors** in the results panel.
 2. This table contains every error row found in the batch (not limited to 50 rows).
 3. Optionally filter **All Errors** by field.
 4. Click any row to load the full JSON record in **Selected Error Record**.
@@ -135,7 +135,7 @@ No installation is required.
 2. Click **Apply to Schema**.
 3. Upload one or more `.json` files.
 4. Click **Validate Batch**.
-5. Open a top error row and inspect the full record.
+5. Open an error row and inspect the full record.
 6. Fix data upstream and rerun validation.
 7. Export clean and error outputs.
 
@@ -156,18 +156,13 @@ No installation is required.
 - **Top Error Fields Insights**:
   - Shows top error-prone fields with count and percentage.
   - Clicking a field chip filters the **All Errors** table to that field.
-- **Top Errors Panel**:
-  - Collapsed by default.
-  - Optional field filter for narrowing rows by error field.
-  - Sortable columns (`File`, `Record #`, `Field`, `Value`, `Error`) with ascending/descending toggle.
-  - Click row to load record detail panel and auto-scroll to it.
-  - Keyboard accessible with `Tab`, `Enter`, or `Space`.
 - **All Errors Panel**:
   - Collapsed by default.
   - Optional field filter for narrowing rows by error field.
   - Sortable columns (`File`, `Record #`, `Field`, `Value`, `Error`) with ascending/descending toggle.
   - Expand to see every error row (uncapped).
-  - Clickable rows behave the same as Top Errors.
+  - Click row to load record detail panel and auto-scroll to it.
+  - Keyboard accessible with `Tab`, `Enter`, or `Space`.
 
 ## What The App Does
 
@@ -181,7 +176,7 @@ High-level flow:
    - Good records
    - Bad records
    - Error details per failing field
-5. The app shows a summary, Top Errors (first 50), All Errors (uncapped and collapsed by default), and download buttons.
+5. The app shows a summary, an **All Errors** panel (uncapped and collapsed by default), and download buttons.
 6. The app also shows a side navigation for quick in-results section jumps.
 
 ## Current Features
@@ -208,13 +203,9 @@ High-level flow:
 - Pipeline gate status:
   - `Pipeline Ready` when pass rate is at least `95%`
   - `Gate Failed` when pass rate is below `95%`
-- Collapsible Top errors table (first 50 errors).
-- Field filter for **Top Errors** table.
-- Sortable columns for **Top Errors** table.
 - Collapsible **All Errors** table containing every error row (uncapped).
 - Field filter for **All Errors** table.
 - Sortable columns for **All Errors** table.
-- Clickable top error rows with full JSON record viewer and automatic scroll to that panel.
 - Clickable all-error rows with the same full-record viewer behavior.
 - Side navigation in results for quick jumps to summary, status, errors, selected record, and downloads.
 - Syntax-highlighted JSON in Selected Error Record viewer.
@@ -313,7 +304,6 @@ Important behavior details:
   - empty/whitespace string
   - empty array
 - Invalid JSON files are skipped silently during batch parse.
-- Top error table shows first 50 errors only (and can be filtered by field).
 - The **All Errors** panel shows the uncapped full list in the UI.
 - The **All Errors** table can also be filtered by field.
 - Full error data is also available in downloads.
@@ -390,13 +380,13 @@ Fix:
 - Deselect `BidDocuments[]` in required fields and click **Apply to Schema** again.
 - Confirm `BidDocuments` is not listed under `schema.properties.Export.items.required`.
 
-### Top error row click does nothing
+### Error row click does nothing
 
 Cause:
 - No rows rendered (no errors) or selected index is unavailable.
 
 Fix:
-- Confirm there are failing rows in **Top Errors**.
+- Confirm there are failing rows in **All Errors**.
 - Re-run validation if results were cleared.
 
 ### Key is not highlighted in Selected Error Record
@@ -431,7 +421,6 @@ Fix:
 ## Known Limitations
 
 - Validation focuses on a subset of JSON Schema behavior.
-- Top errors panel is capped at 50 rows for readability (use **All Errors** for uncapped rows).
 - Invalid JSON files are skipped without detailed per-file parse messages.
 
 ## What Changed Recently
@@ -443,7 +432,7 @@ Fix:
 - Adjusted required-field behavior so unselected fields (such as `BidDocuments[]`) are not validated.
 - Expanded date-time acceptance to include ISO date-only and slash date values (for example `03/05/2026`).
 - Added inline UI guidance clarifying required-field validation behavior.
-- Added field filters for **Top Errors** and **All Errors** tables.
+- Added field filter and sorting for the **All Errors** table.
 - Updated theme behavior to a shared 3-mode toggle (`System`, `Dark`, `Light`) with system as default.
 - Moved README viewer inline styles/scripts into `readme.css` and `readme.js`.
 

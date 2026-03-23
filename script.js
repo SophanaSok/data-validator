@@ -1339,7 +1339,6 @@ async function validateFiles() {
         errorsByField
     };
 
-    const topFieldOptions = buildErrorFieldFilterOptions(topErrorsPreview);
     const allFieldOptions = buildErrorFieldFilterOptions(allErrorsPreview);
 
     // Build error severity breakdown for display
@@ -1354,7 +1353,6 @@ async function validateFiles() {
                 <p class="results-side-nav-title">Jump to</p>
                 <a href="#resultsSummary" class="results-side-link">Summary</a>
                 <a href="#resultsGateStatus" class="results-side-link">Gate Status</a>
-                <a href="#resultsTopErrors" class="results-side-link">Top Errors</a>
                 <a href="#resultsAllErrors" class="results-side-link">All Errors</a>
                 <a href="#selectedErrorRecord" class="results-side-link">Selected Record</a>
                 <a href="#resultsDownloads" class="results-side-link">Downloads</a>
@@ -1406,28 +1404,6 @@ async function validateFiles() {
                 <div id="resultsGateStatus" class="card">
                     <h3>${isPass ? '✅ Pipeline Ready' : '❌ Gate Failed'}</h3>
                     <p>${totalRecords} total records across ${files.length} files</p>
-                </div>
-
-                <div id="resultsTopErrors" class="card">
-                    <details class="all-errors-panel">
-                        <summary>🔥 Top Errors (${topErrorsPreview.length})</summary>
-                        <p class="error-row-hint">Click any error row to view the full JSON record.</p>
-                        <div class="error-filter-row">
-                            <label for="topErrorFieldFilter">Filter by field</label>
-                            <select id="topErrorFieldFilter" class="error-field-filter" data-filter-source="top">
-                                ${topFieldOptions}
-                            </select>
-                            <span id="topErrorsCount" class="error-filter-count">${topErrorsPreview.length} of ${topErrorsPreview.length}</span>
-                        </div>
-                        <table>
-                            <thead id="topErrorsHead">
-                                ${renderErrorTableHead('top')}
-                            </thead>
-                            <tbody id="topErrorsBody">
-                            ${renderErrorRowsForTable(filterErrorsByField(topErrorsPreview, ''), 'top')}
-                            </tbody>
-                        </table>
-                    </details>
                 </div>
 
                 <div id="resultsAllErrors" class="card">
