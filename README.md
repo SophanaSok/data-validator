@@ -7,9 +7,11 @@ Use it to:
 - Apply those required fields directly into the schema.
 - Validate one or many JSON files in a single run.
 - Review pass/fail summaries and top validation errors.
+- Use a side navigation in generated results to quickly jump between sections.
 - Filter both **Top Errors** and **All Errors** by field.
 - Click any top error row to inspect the full JSON record (the page auto-scrolls to the record viewer).
-- Expand a collapsed **All Errors** section to review every error row (not capped).
+- Expand collapsed **Top Errors** and **All Errors** sections to review rows.
+- Inspect selected records with JSON syntax highlighting plus field-key highlighting.
 - Export passing records, failing records, and CSV error reports.
 
 ## Quick 60-Second Start
@@ -43,7 +45,7 @@ No installation is required.
 4. Watch the live `Selected: field1, field2, field3...` indicator under the selector as you choose fields. It displays the actual names of all selected fields in real time.
 5. Optionally add more names in **Manual Required Fields**.
 6. Click **Apply to Schema**.
-7. Confirm the success message showing how many required fields were applied.
+7. Confirm the top toast notification showing how many required fields were applied.
 
 ### 3. Review schema
 
@@ -75,6 +77,7 @@ No installation is required.
 
 - Click **Validate Batch**.
 - Wait for progress to complete.
+- The page auto-scrolls to generated results and the side navigation appears.
 - Review pass rate, gate status, and top errors.
 
 ### 6. Inspect full record from error tables
@@ -82,7 +85,8 @@ No installation is required.
 1. In **Top Errors** or **All Errors**, click any row.
 2. The page auto-scrolls to **Selected Error Record**.
 3. The JSON key causing the validation error is highlighted in the record viewer and automatically brought into view.
-4. Use this to quickly debug what failed in context.
+4. JSON is syntax highlighted (keys, strings, numbers, booleans, and null) to improve readability.
+5. Use this to quickly debug what failed in context.
 
 ### 6.1 Understand key highlighting
 
@@ -94,10 +98,16 @@ No installation is required.
 
 ### 6.2 Review uncapped errors
 
-1. Expand **All Errors** in the results panel.
+1. Expand **Top Errors** and/or **All Errors** in the results panel.
 2. This table contains every error row found in the batch (not limited to 50 rows).
 3. Optionally filter **All Errors** by field.
 4. Click any row to load the full JSON record in **Selected Error Record**.
+
+### 6.3 Understand in-app notifications
+
+1. The app uses non-blocking toast notifications instead of browser alerts.
+2. Success notifications are subtle and auto-dismiss.
+3. Warning/error notifications stay visible longer and are announced with higher accessibility priority.
 
 ### 7. Export outputs
 
@@ -117,11 +127,16 @@ No installation is required.
 
 ## UI Guide
 
-- **Theme Toggle**: cycles through `System`, `Dark`, and `Light` modes.
+- **Theme Toggle**:
+  - Default mode is **System**.
+  - Clicking from **System** switches to the opposite of the current OS theme (to avoid no-op toggles).
+  - Then cycles through explicit modes and back to `System`.
 - **User Guide Link**: opens the GitHub-style README viewer page.
-- **Validation Engine Badge**: currently indicates local validation.
+- **Validation Engine Badge**: includes a hover/focus tooltip explaining validation runs locally in-browser.
 - **Results Panel**: regenerated on each validation run.
-- **Top Errors Table**:
+- **Results Side Navigation**: appears after validation and provides jump links to each generated section.
+- **Top Errors Panel**:
+  - Collapsed by default.
   - Optional field filter for narrowing rows by error field.
   - Click row to load record detail panel and auto-scroll to it.
   - Keyboard accessible with `Tab`, `Enter`, or `Space`.
@@ -144,6 +159,7 @@ High-level flow:
    - Bad records
    - Error details per failing field
 5. The app shows a summary, Top Errors (first 50), All Errors (uncapped and collapsed by default), and download buttons.
+6. The app also shows a side navigation for quick in-results section jumps.
 
 ## Current Features
 
@@ -155,6 +171,8 @@ High-level flow:
 - Live selected-count helper (`Selected: X fields`) below the required-field selector.
 - Manual required field input (comma or newline separated).
 - Progress bar during validation.
+- Auto-scroll to generated validation results after validation completes.
+- In-app toast notifications for success/warning/error feedback (instead of blocking browser alerts).
 - Validation dashboard:
   - Pass rate
   - Good records count
@@ -163,12 +181,14 @@ High-level flow:
 - Pipeline gate status:
   - `Pipeline Ready` when pass rate is at least `95%`
   - `Gate Failed` when pass rate is below `95%`
-- Top errors table (first 50 errors).
+- Collapsible Top errors table (first 50 errors).
 - Field filter for **Top Errors** table.
 - Collapsible **All Errors** table containing every error row (uncapped).
 - Field filter for **All Errors** table.
 - Clickable top error rows with full JSON record viewer and automatic scroll to that panel.
 - Clickable all-error rows with the same full-record viewer behavior.
+- Side navigation in results for quick jumps to summary, status, errors, selected record, and downloads.
+- Syntax-highlighted JSON in Selected Error Record viewer.
 - Selected record key highlighting for the exact field/path causing each error.
 - Nested-path fallback highlighting that marks the nearest parent key when an exact nested match is not renderable (for example some `BidDocuments[]` errors).
 - In-view legend text explaining highlighted key behavior.
@@ -177,7 +197,7 @@ High-level flow:
   - `good-bids.json`
   - `bad-bids.json`
   - `errors.csv`
-- Three-stage theme toggle: `System` -> `Dark` -> `Light`.
+- Three-stage theme toggle with System-first behavior and opposite-theme first click from System mode.
 
 ## Required Fields Selector
 
@@ -310,6 +330,9 @@ Cause:
 
 Fix:
 - Add files via drag-drop or picker.
+
+Note:
+- These messages are shown as in-app toast notifications.
 
 ### Many required-field failures
 
