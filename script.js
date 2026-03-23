@@ -125,6 +125,7 @@ function bindUIEvents() {
 
     if (ui.results) {
         ui.results.addEventListener('click', handleStatClick);
+        ui.results.addEventListener('click', handleTopErrorFieldInsightClick);
         ui.results.addEventListener('click', handleErrorSortHeaderClick);
         ui.results.addEventListener('click', handleTopErrorRowClick);
         ui.results.addEventListener('keydown', e => {
@@ -371,6 +372,31 @@ function buildErrorFieldBreakdown(errors) {
     return Object.entries(fieldCounts)
         .map(([field, count]) => ({ field, count, percent: ((count / errors.length) * 100).toFixed(1) }))
         .sort((a, b) => b.count - a.count);
+}
+
+function buildTopErrorFieldInsights(errorsByField, totalErrors, limit = 5) {
+    return Object.entries(errorsByField || {})
+        .map(([field, count]) => ({
+            field,
+            count,
+            percent: totalErrors > 0 ? ((count / totalErrors) * 100).toFixed(1) : '0.0'
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, limit);
+}
+
+function handleTopErrorFieldInsightClick(e) {
+    const button = e.target.closest('.top-field-chip');
+    if (!button || !ui || !ui.results) {
+        return;
+    }
+
+    const field = button.dataset.field || '';
+    if (!field) {
+        return;
+    }
+
+    filterAllErrorsByField(field);
 }
 
 function buildPerFileBreakdown(errors, allErrors) {
@@ -1320,6 +1346,7 @@ async function validateFiles() {
     const severityBreakdown = buildErrorSeverityBreakdown(allErrorsPreview);
     const mostCommonSeverity = severityBreakdown.length > 0 ? severityBreakdown[0].severity : 'N/A';
     const mostCommonSeverityCount = severityBreakdown.length > 0 ? severityBreakdown[0].count : 0;
+    const topErrorFieldInsights = buildTopErrorFieldInsights(errorsByField, allErrors.length, 5);
 
     ui.results.innerHTML = `
         <div class="results-layout">
@@ -1357,6 +1384,16 @@ async function validateFiles() {
                     </div>
                 </section>
                 <p class="stats-hint">Click a stat card to view detailed insights.</p>
+
+                <div class="card top-fields-insights-card" id="topErrorFieldsInsights">
+                    <h3>Top Error Fields</h3>
+                    ${topErrorFieldInsights.length
+                        ? `<div class="top-fields-chip-list">${topErrorFieldInsights
+                            .map(item => `<button type="button" class="top-field-chip" data-field="${escapeHTML(item.field)}" aria-label="Filter all errors to field ${escapeHTML(item.field)}">${escapeHTML(item.field)} <span>${item.count} (${item.percent}%)</span></button>`)
+                            .join('')}</div>
+                           <p class="top-fields-hint">Click a field to filter the All Errors table.</p>`
+                        : '<p class="top-fields-empty">No error fields available yet.</p>'}
+                </div>
 
                 <div id="statDetailsPanel" class="card stat-details-panel" hidden>
                     <div class="stat-details-panel-header">

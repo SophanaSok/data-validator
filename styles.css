@@ -389,6 +389,54 @@ textarea:focus-visible,
     color: color-mix(in srgb, var(--text) 60%, transparent);
 }
 
+.top-fields-insights-card {
+    margin-top: -0.2rem;
+}
+
+.top-fields-insights-card h3 {
+    margin: 0 0 0.7rem;
+    font-size: 1rem;
+}
+
+.top-fields-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.top-field-chip {
+    margin: 0;
+    width: auto;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface-muted);
+    color: var(--text);
+    font-size: 0.84rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.top-field-chip span {
+    font-size: 0.78rem;
+    color: color-mix(in srgb, var(--text) 62%, transparent);
+    font-weight: 600;
+}
+
+.top-field-chip:hover {
+    background: color-mix(in srgb, var(--surface-muted) 84%, var(--accent) 16%);
+    border-color: color-mix(in srgb, var(--accent) 54%, var(--border));
+}
+
+.top-fields-hint,
+.top-fields-empty {
+    margin: 0.7rem 0 0;
+    font-size: 0.84rem;
+    color: color-mix(in srgb, var(--text) 60%, transparent);
+}
+
 .results-layout {
     display: grid;
     grid-template-columns: 220px minmax(0, 1fr);
