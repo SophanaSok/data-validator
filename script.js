@@ -589,7 +589,9 @@ function filterAllErrorsByField(field) {
     const filterSelect = ui.results.querySelector('#allErrorFieldFilter');
     if (filterSelect) {
         filterSelect.value = field === '(root)' ? '' : field;
-        filterSelect.dispatchEvent(new Event('change'));
+        // Dispatch change event on the select element itself, not on results container
+        // (change events on select don't bubble, so listeners on parent won't catch them)
+        filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
         
         const allErrorsPanel = ui.results.querySelector('#resultsAllErrors');
         if (allErrorsPanel) {
