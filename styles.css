@@ -108,8 +108,8 @@ h1 {
     content: attr(data-tooltip);
     position: absolute;
     left: 50%;
-    bottom: calc(100% + 10px);
-    transform: translateX(-50%) translateY(4px);
+    top: calc(100% + 10px);
+    transform: translateX(-50%) translateY(-4px);
     width: 250px;
     max-width: min(250px, 78vw);
     padding: 8px 10px;
