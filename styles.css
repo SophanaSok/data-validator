@@ -462,6 +462,22 @@ textarea:focus-visible,
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
+.stat.is-clicked {
+    animation: stat-click-pop 220ms ease;
+}
+
+@keyframes stat-click-pop {
+    0% {
+        transform: scale(1);
+    }
+    45% {
+        transform: scale(0.97);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
 .stat.pass {
     border-color: var(--success);
     background: color-mix(in srgb, var(--success) 11%, var(--card));
@@ -971,5 +987,6 @@ tbody tr:nth-child(even) {
 @media (prefers-reduced-motion: reduce) {
     * {
         transition: none !important;
+        animation: none !important;
     }
 }

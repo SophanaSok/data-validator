@@ -459,6 +459,14 @@ function handleStatClick(e) {
         return;
     }
 
+    triggerStatClickAnimation(stat);
+
+    const statTypeFromData = stat.dataset.statType || '';
+    if (statTypeFromData === 'pass-rate' || statTypeFromData === 'good-records' || statTypeFromData === 'bad-records') {
+        togglePerFileBreakdownPanel(statTypeFromData);
+        return;
+    }
+
     const label = stat.querySelector('p');
     if (!label) {
         return;
@@ -466,18 +474,25 @@ function handleStatClick(e) {
 
     const statType = label.textContent.trim().toLowerCase();
 
-    if (statType.includes('bad record')) {
-        filterErrorsByBadRecords();
-        togglePerFileBreakdownPanel('bad-records');
-    } else if (statType.includes('error') && statType.includes('found')) {
+    if (statType.includes('error') && statType.includes('found')) {
         showErrorFieldBreakdown();
-    } else if (statType.includes('pass rate')) {
-        togglePerFileBreakdownPanel('pass-rate');
-    } else if (statType.includes('good record')) {
-        togglePerFileBreakdownPanel('good-records');
     } else if (statType.includes('error severity')) {
         showErrorSeverityBreakdown();
     }
+}
+
+function triggerStatClickAnimation(statElement) {
+    if (!statElement) {
+        return;
+    }
+
+    statElement.classList.remove('is-clicked');
+    void statElement.offsetWidth;
+    statElement.classList.add('is-clicked');
+
+    setTimeout(() => {
+        statElement.classList.remove('is-clicked');
+    }, 220);
 }
 
 function togglePerFileBreakdownPanel(statType) {
