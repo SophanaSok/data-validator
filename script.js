@@ -733,6 +733,15 @@ async function validateFiles() {
             </div>
         </div>
     `;
+
+    requestAnimationFrame(() => {
+        const summarySection = ui.results.querySelector('#resultsSummary');
+        if (summarySection) {
+            summarySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            ui.results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
 }
 
 function getFieldFromPath(path) {
