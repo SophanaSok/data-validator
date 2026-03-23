@@ -136,6 +136,16 @@ body {
     animation: reveal 0.36s ease;
 }
 
+.guide-source-note {
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-soft);
+    color: var(--text-subtle);
+    font-size: 0.86rem;
+}
+
 .markdown-body {
     box-sizing: border-box;
     width: 100%;

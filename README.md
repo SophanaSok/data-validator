@@ -9,6 +9,7 @@ Use it to:
 - Review pass/fail summaries and top validation errors.
 - Use a side navigation in generated results to quickly jump between sections.
 - Filter both **Top Errors** and **All Errors** by field.
+- Sort both **Top Errors** and **All Errors** by clicking column headers.
 - Click any top error row to inspect the full JSON record (the page auto-scrolls to the record viewer).
 - Expand collapsed **Top Errors** and **All Errors** sections to review rows.
 - Inspect selected records with JSON syntax highlighting plus field-key highlighting.
@@ -22,8 +23,9 @@ Use it to:
 4. Click **Validate Batch**.
 5. Review pass rate and gate status.
 6. Optionally filter **Top Errors** or **All Errors** by field.
-7. Click a row in **Top Errors** or **All Errors** to inspect the full JSON record.
-8. Download `good-bids.json`, `bad-bids.json`, or `errors.csv`.
+7. Optionally sort either table by clicking a column header (click again to reverse direction).
+8. Click a row in **Top Errors** or **All Errors** to inspect the full JSON record.
+9. Download `good-bids.json`, `bad-bids.json`, or `errors.csv`.
 
 ## How To Use The App
 
@@ -40,7 +42,7 @@ No installation is required.
 ### 2. Choose required fields
 
 1. The following four fields are **preselected by default**: `AgentName`, `AgentID`, `LegacyAgentID`, and `ResourceURL`.
-2. **Quickly select all fields**: Click the **Select All** button next to the label to toggle between selecting all available fields and clearing all selections.
+2. **Quickly select all fields**: Click the **Select All** button next to the label to select all available fields. Once all are selected, the label switches to **Deselect All** so you can clear all fields in one click.
 3. Adjust the selection with normal clicks: click once to select, click again to deselect (no modifier keys required). Selecting fields will **not** jump the scroll position to the top.
 4. Watch the live `Selected: field1, field2, field3...` indicator under the selector as you choose fields. It displays the actual names of all selected fields in real time.
 5. Optionally add more names in **Manual Required Fields**.
@@ -138,11 +140,13 @@ No installation is required.
 - **Top Errors Panel**:
   - Collapsed by default.
   - Optional field filter for narrowing rows by error field.
+  - Sortable columns (`File`, `Record #`, `Field`, `Value`, `Error`) with ascending/descending toggle.
   - Click row to load record detail panel and auto-scroll to it.
   - Keyboard accessible with `Tab`, `Enter`, or `Space`.
 - **All Errors Panel**:
   - Collapsed by default.
   - Optional field filter for narrowing rows by error field.
+  - Sortable columns (`File`, `Record #`, `Field`, `Value`, `Error`) with ascending/descending toggle.
   - Expand to see every error row (uncapped).
   - Clickable rows behave the same as Top Errors.
 
@@ -168,6 +172,7 @@ High-level flow:
 - Selected-file list with per-file remove action.
 - Editable schema text area.
 - Required field selector with click-to-toggle behavior (click to select, click again to deselect).
+- Select-all control that toggles label/state between `Select All` and `Deselect All`.
 - Live selected-count helper (`Selected: X fields`) below the required-field selector.
 - Manual required field input (comma or newline separated).
 - Progress bar during validation.
@@ -183,8 +188,10 @@ High-level flow:
   - `Gate Failed` when pass rate is below `95%`
 - Collapsible Top errors table (first 50 errors).
 - Field filter for **Top Errors** table.
+- Sortable columns for **Top Errors** table.
 - Collapsible **All Errors** table containing every error row (uncapped).
 - Field filter for **All Errors** table.
+- Sortable columns for **All Errors** table.
 - Clickable top error rows with full JSON record viewer and automatic scroll to that panel.
 - Clickable all-error rows with the same full-record viewer behavior.
 - Side navigation in results for quick jumps to summary, status, errors, selected record, and downloads.
