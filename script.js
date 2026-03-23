@@ -8,6 +8,12 @@ let errorSortState = {
     top: { key: null, direction: 'asc' },
     all: { key: null, direction: 'asc' }
 };
+let statBreakdownState = {
+    files: [],
+    badRecordIndices: new Set(),
+    errorsByFile: {},
+    errorsByField: {}
+};
 
 document.addEventListener('DOMContentLoaded', initApp);
 
@@ -118,10 +124,17 @@ function bindUIEvents() {
     }
 
     if (ui.results) {
+        ui.results.addEventListener('click', handleStatClick);
         ui.results.addEventListener('click', handleErrorSortHeaderClick);
         ui.results.addEventListener('click', handleTopErrorRowClick);
-        ui.results.addEventListener('change', handleErrorFieldFilterChange);
         ui.results.addEventListener('keydown', e => {
+            const stat = e.target.closest('.stat');
+            if (stat && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                stat.click();
+                return;
+            }
+
             const sortHeader = e.target.closest('.sortable-header');
             if (sortHeader && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
@@ -139,6 +152,9 @@ function bindUIEvents() {
                 showErrorRecord(row.dataset.errorIndex, row.dataset.errorSource);
             }
         });
+        ui.results.addEventListener('mouseover', handleStatHover);
+        ui.results.addEventListener('mouseout', handleStatHoverEnd);
+        ui.results.addEventListener('change', handleErrorFieldFilterChange);
     }
 
     ['dragover', 'drop'].forEach(event => {
@@ -344,6 +360,247 @@ function getSortableErrorValue(error, key) {
             return error.message || '';
         default:
             return '';
+    }
+}
+
+function buildErrorFieldBreakdown(errors) {
+    const fieldCounts = {};
+    (errors || []).forEach(err => {
+        const field = err.field || '(root)';
+        fieldCounts[field] = (fieldCounts[field] || 0) + 1;
+    });
+
+    return Object.entries(fieldCounts)
+        .map(([field, count]) => ({ field, count, percent: ((count / errors.length) * 100).toFixed(1) }))
+        .sort((a, b) => b.count - a.count);
+}
+
+function buildPerFileBreakdown(errors, allErrors) {
+    const fileBreakdown = {};
+    (errors || []).forEach(err => {
+        const file = err.file || '(unknown)';
+        if (!fileBreakdown[file]) {
+            fileBreakdown[file] = 0;
+        }
+        fileBreakdown[file]++;
+    });
+
+    const sorted = Object.entries(fileBreakdown)
+        .map(([file, count]) => ({ file, count, percent: ((count / allErrors.length) * 100).toFixed(1) }))
+        .sort((a, b) => b.count - a.count);
+
+    return { breakdown: sorted, total: errors.length };
+}
+
+function handleStatClick(e) {
+    const stat = e.target.closest('.stat');
+    if (!stat || !ui || !ui.results) {
+        return;
+    }
+
+    const label = stat.querySelector('p');
+    if (!label) {
+        return;
+    }
+
+    const statType = label.textContent.trim().toLowerCase();
+
+    if (statType.includes('bad record')) {
+        filterErrorsByBadRecords();
+    } else if (statType.includes('error') && statType.includes('found')) {
+        showErrorFieldBreakdown();
+    }
+}
+
+function handleStatHover(e) {
+    const stat = e.target.closest('.stat');
+    if (!stat) {
+        return;
+    }
+
+    const label = stat.querySelector('p');
+    if (!label) {
+        return;
+    }
+
+    const statType = label.textContent.trim().toLowerCase();
+    const fileBreakdown = statBreakdownState.errorsByFile;
+    if (Object.keys(fileBreakdown).length === 0) {
+        return;
+    }
+
+    let tooltipContent = '';
+    if (statType.includes('pass rate')) {
+        tooltipContent = buildStatTooltip('Pass Rate by File', statBreakdownState.files.map(f => ({
+            file: f,
+            good: fileBreakdown[f]?.good || 0,
+            total: fileBreakdown[f]?.total || 0,
+            rate: fileBreakdown[f] ? (((fileBreakdown[f].good) / fileBreakdown[f].total) * 100).toFixed(1) : '0'
+        })));
+    } else if (statType.includes('good record')) {
+        tooltipContent = buildStatTooltip('Good Records by File', statBreakdownState.files.map(f => ({
+            file: f,
+            count: fileBreakdown[f]?.good || 0
+        })));
+    } else if (statType.includes('bad record')) {
+        tooltipContent = buildStatTooltip('Bad Records by File', statBreakdownState.files.map(f => ({
+            file: f,
+            count: fileBreakdown[f]?.bad || 0
+        })));
+    } else if (statType.includes('error') && statType.includes('found')) {
+        tooltipContent = buildStatTooltip('Errors by File', statBreakdownState.files.map(f => ({
+            file: f,
+            count: fileBreakdown[f]?.errors || 0
+        })));
+    }
+
+    if (tooltipContent) {
+        showStatTooltip(stat, tooltipContent);
+    }
+}
+
+function handleStatHoverEnd(e) {
+    const stat = e.target.closest('.stat');
+    if (stat) {
+        removeStatTooltip(stat);
+    }
+}
+
+function buildStatTooltip(title, data) {
+    const lines = [title, '---'];
+    data.forEach(item => {
+        if (item.rate !== undefined) {
+            lines.push(`${item.file}: ${item.good}/${item.total} (${item.rate}%)`);
+        } else if (item.count !== undefined) {
+            lines.push(`${item.file}: ${item.count}`);
+        }
+    });
+    return lines.join('\n');
+}
+
+function showStatTooltip(stat, content) {
+    removeStatTooltip(stat);
+    const tooltip = document.createElement('div');
+    tooltip.className = 'stat-tooltip';
+    tooltip.textContent = content;
+    stat.appendChild(tooltip);
+}
+
+function removeStatTooltip(stat) {
+    const existingTooltip = stat.querySelector('.stat-tooltip');
+    if (existingTooltip) {
+        existingTooltip.remove();
+    }
+}
+
+function filterErrorsByBadRecords() {
+    if (!ui || !ui.results || statBreakdownState.badRecordIndices.size === 0) {
+        return;
+    }
+
+    const allErrorsPanel = ui.results.querySelector('#resultsAllErrors');
+    if (!allErrorsPanel) {
+        return;
+    }
+
+    const details = allErrorsPanel.querySelector('details');
+    if (details && !details.open) {
+        details.open = true;
+    }
+
+    const filterSelect = ui.results.querySelector('#allErrorFieldFilter');
+    if (filterSelect) {
+        filterSelect.value = '';
+        filterSelect.dispatchEvent(new Event('change'));
+    }
+
+    const tableBody = ui.results.querySelector('#allErrorsBody');
+    if (tableBody) {
+        const badRecordErrors = allErrorsPreview.filter((err, idx) => 
+            statBreakdownState.badRecordIndices.has(idx)
+        );
+        
+        const entries = badRecordErrors.map((error, index) => ({ error, index }));
+        const sortedEntries = sortErrorEntries(entries, 'all');
+        tableBody.innerHTML = renderErrorRowsForTable(sortedEntries, 'all');
+        
+        showAppNotice(`Filtered to ${badRecordErrors.length} errors from bad records.`, 'info');
+    }
+}
+
+function showErrorFieldBreakdown() {
+    if (!ui || !ui.results) {
+        return;
+    }
+
+    const fieldBreakdown = buildErrorFieldBreakdown(allErrorsPreview);
+    if (fieldBreakdown.length === 0) {
+        return;
+    }
+
+    let existingModal = document.getElementById('fieldBreakdownModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'fieldBreakdownModal';
+    modal.className = 'field-breakdown-modal';
+    modal.innerHTML = `
+        <div class="field-breakdown-content">
+            <button class="field-breakdown-close" aria-label="Close field breakdown">&times;</button>
+            <h3>Error Distribution by Field</h3>
+            <div class="field-breakdown-list">
+                ${fieldBreakdown.map(item => `
+                    <div class="field-breakdown-item" data-field="${escapeHTML(item.field)}">
+                        <span class="field-name">${escapeHTML(item.field)}</span>
+                        <span class="field-stats">
+                            <span class="field-count">${item.count}</span>
+                            <span class="field-percent">${item.percent}%</span>
+                        </span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeBtn = modal.querySelector('.field-breakdown-close');
+    closeBtn.addEventListener('click', () => modal.remove());
+
+    const items = modal.querySelectorAll('.field-breakdown-item');
+    items.forEach(item => {
+        item.addEventListener('click', () => {
+            const field = item.dataset.field;
+            modal.remove();
+            filterAllErrorsByField(field);
+        });
+    });
+
+    modal.addEventListener('click', e => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+function filterAllErrorsByField(field) {
+    const filterSelect = ui.results.querySelector('#allErrorFieldFilter');
+    if (filterSelect) {
+        filterSelect.value = field === '(root)' ? '' : field;
+        filterSelect.dispatchEvent(new Event('change'));
+        
+        const allErrorsPanel = ui.results.querySelector('#resultsAllErrors');
+        if (allErrorsPanel) {
+            const details = allErrorsPanel.querySelector('details');
+            if (details && !details.open) {
+                details.open = true;
+            }
+            setTimeout(() => {
+                allErrorsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
     }
 }
 
@@ -808,6 +1065,52 @@ async function validateFiles() {
         all: { key: null, direction: 'asc' }
     };
 
+    // Build stat breakdown state for interactive features
+    const fileSet = new Set();
+    const badRecordIndices = new Set();
+    const errorsByFile = {};
+    const errorsByField = {};
+
+    allErrors.forEach((err, idx) => {
+        const file = err.file || '(unknown)';
+        fileSet.add(file);
+        
+        if (!errorsByFile[file]) {
+            errorsByFile[file] = { good: 0, bad: 0, errors: 0, total: 0 };
+        }
+        errorsByFile[file].errors++;
+
+        const field = err.field || '(root)';
+        errorsByField[field] = (errorsByField[field] || 0) + 1;
+    });
+
+    // Count good/bad records per file
+    allGood.forEach(record => {
+        const errorsForRecord = allErrors.filter(e => e.record === record);
+        const file = errorsForRecord.length > 0 ? errorsForRecord[0].file : files[0]?.name || '(unknown)';
+        if (errorsByFile[file]) {
+            errorsByFile[file].good++;
+            errorsByFile[file].total++;
+        }
+    });
+
+    allBad.forEach((record, badIdx) => {
+        const errorsForRecord = allErrors.filter(e => e.record === record);
+        const file = errorsForRecord.length > 0 ? errorsForRecord[0].file : files[0]?.name || '(unknown)';
+        if (errorsByFile[file]) {
+            errorsByFile[file].bad++;
+            errorsByFile[file].total++;
+        }
+        badRecordIndices.add(badIdx);
+    });
+
+    statBreakdownState = {
+        files: Array.from(fileSet).sort(),
+        badRecordIndices,
+        errorsByFile,
+        errorsByField
+    };
+
     const topFieldOptions = buildErrorFieldFilterOptions(topErrorsPreview);
     const allFieldOptions = buildErrorFieldFilterOptions(allErrorsPreview);
 
@@ -825,19 +1128,19 @@ async function validateFiles() {
 
             <div class="results-main">
                 <section id="resultsSummary" class="stats-grid">
-                    <div class="stat ${isPass ? 'pass' : 'fail'}">
+                    <div class="stat ${isPass ? 'pass' : 'fail'}" role="button" tabindex="0" data-stat-type="pass-rate">
                         <h3>${passRate}%</h3>
                         <p>Pass Rate</p>
                     </div>
-                    <div class="stat">
+                    <div class="stat" role="button" tabindex="0" data-stat-type="good-records">
                         <h3>${allGood.length}</h3>
                         <p>Good Records</p>
                     </div>
-                    <div class="stat">
+                    <div class="stat" role="button" tabindex="0" data-stat-type="bad-records">
                         <h3>${allBad.length}</h3>
                         <p>Bad Records</p>
                     </div>
-                    <div class="stat">
+                    <div class="stat" role="button" tabindex="0" data-stat-type="errors-found">
                         <h3>${allErrors.length}</h3>
                         <p>Errors Found</p>
                     </div>

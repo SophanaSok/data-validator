@@ -440,6 +440,20 @@ textarea:focus-visible,
     border-radius: 8px;
     text-align: center;
     border: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    user-select: none;
+}
+
+.stat:hover {
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface-muted));
+    border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+}
+
+.stat:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .stat.pass {
@@ -447,9 +461,156 @@ textarea:focus-visible,
     background: color-mix(in srgb, var(--success) 11%, var(--card));
 }
 
+.stat.pass:hover {
+    background: color-mix(in srgb, var(--success) 18%, var(--card));
+    border-color: var(--success);
+}
+
 .stat.fail {
     border-color: var(--danger);
     background: color-mix(in srgb, var(--danger) 10%, var(--card));
+}
+
+.stat.fail:hover {
+    background: color-mix(in srgb, var(--danger) 18%, var(--card));
+    border-color: var(--danger);
+}
+
+.stat-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    font-family: monospace;
+}
+
+.stat-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--text);
+}
+
+.field-breakdown-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    animation: fadeIn 0.2s ease;
+}
+
+.field-breakdown-content {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    max-width: 420px;
+    max-height: 70vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.field-breakdown-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 24px;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.field-breakdown-close:hover {
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface-muted));
+}
+
+.field-breakdown-content h3 {
+    margin: 0 0 16px;
+    font-size: 1.1rem;
+    color: var(--text);
+}
+
+.field-breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.field-breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface-muted);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.field-breakdown-item:hover {
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface-muted));
+    border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+}
+
+.field-name {
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    word-break: break-word;
+}
+
+.field-stats {
+    display: flex;
+    gap: 8px;
+    margin-left: 12px;
+    white-space: nowrap;
+}
+
+.field-count {
+    font-weight: 600;
+    color: color-mix(in srgb, var(--accent) 76%, var(--text));
+}
+
+.field-percent {
+    color: color-mix(in srgb, var(--text) 58%, transparent);
+    font-size: 0.85rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 table {
