@@ -394,6 +394,26 @@ function tokensEqual(a, b) {
     return true;
 }
 
+function renderPrimitiveJsonValue(value) {
+    if (typeof value === 'string') {
+        return `<span class="json-string">${escapeHTML(JSON.stringify(value))}</span>`;
+    }
+
+    if (typeof value === 'number') {
+        return `<span class="json-number">${escapeHTML(JSON.stringify(value))}</span>`;
+    }
+
+    if (typeof value === 'boolean') {
+        return `<span class="json-boolean">${escapeHTML(JSON.stringify(value))}</span>`;
+    }
+
+    if (value === null) {
+        return '<span class="json-null">null</span>';
+    }
+
+    return `<span class="json-null">${escapeHTML(String(value))}</span>`;
+}
+
 function renderRecordWithHighlightedKey(record, errorPath) {
     const rawTokens = parsePathTokens(errorPath);
     const targetTokens = stripTrailingNumericTokens(rawTokens);
@@ -411,7 +431,7 @@ function renderRecordWithHighlightedKey(record, errorPath) {
         }
     }
 
-    return { html: escapeHTML(JSON.stringify(record, null, 2)), foundHighlight: false };
+    return { html: renderPrimitiveJsonValue(record), foundHighlight: false };
 }
 
 function renderJsonNodeWithHighlight(value, targetTokens, currentTokens, depth) {
@@ -450,9 +470,10 @@ function renderJsonNodeWithHighlight(value, targetTokens, currentTokens, depth) 
             const keyPath = [...currentTokens, key];
             const isTargetKey = targetTokens.length > 0 && tokensEqual(keyPath, targetTokens);
             const keyText = escapeHTML(JSON.stringify(key));
+            const keyWithSyntax = `<span class="json-key">${keyText}</span>`;
             const renderedKey = isTargetKey
-                ? `<span class="record-key-highlight">${keyText}</span>`
-                : keyText;
+                ? `<span class="record-key-highlight">${keyWithSyntax}</span>`
+                : keyWithSyntax;
 
             const child = renderJsonNodeWithHighlight(childValue, targetTokens, keyPath, depth + 1);
             foundHighlight = foundHighlight || child.foundHighlight || isTargetKey;
@@ -466,7 +487,7 @@ function renderJsonNodeWithHighlight(value, targetTokens, currentTokens, depth) 
     }
 
     return {
-        html: escapeHTML(JSON.stringify(value)),
+        html: renderPrimitiveJsonValue(value),
         foundHighlight: false
     };
 }

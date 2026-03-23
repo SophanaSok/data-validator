@@ -501,6 +501,29 @@ tr:hover {
     word-break: break-word;
 }
 
+.record-viewer .json-key {
+    color: color-mix(in srgb, var(--accent) 72%, var(--text));
+    font-weight: 600;
+}
+
+.record-viewer .json-string {
+    color: color-mix(in srgb, var(--success) 75%, var(--text));
+}
+
+.record-viewer .json-number {
+    color: color-mix(in srgb, #6f4ef6 72%, var(--text));
+}
+
+.record-viewer .json-boolean {
+    color: color-mix(in srgb, #cc7a00 78%, var(--text));
+    font-weight: 600;
+}
+
+.record-viewer .json-null {
+    color: color-mix(in srgb, var(--danger) 78%, var(--text));
+    font-style: italic;
+}
+
 .record-key-highlight {
     background: color-mix(in srgb, var(--danger) 20%, transparent);
     color: var(--danger);
@@ -513,6 +536,26 @@ tr:hover {
 
 [data-theme="dark"] .record-key-highlight {
     background: color-mix(in srgb, var(--danger) 20%, transparent);
+}
+
+[data-theme="dark"] .record-viewer .json-key {
+    color: color-mix(in srgb, var(--accent) 82%, #dbe8ff);
+}
+
+[data-theme="dark"] .record-viewer .json-string {
+    color: color-mix(in srgb, var(--success) 82%, #e6edf8);
+}
+
+[data-theme="dark"] .record-viewer .json-number {
+    color: color-mix(in srgb, #9f8cff 78%, #e6edf8);
+}
+
+[data-theme="dark"] .record-viewer .json-boolean {
+    color: color-mix(in srgb, #ffb55a 82%, #e6edf8);
+}
+
+[data-theme="dark"] .record-viewer .json-null {
+    color: color-mix(in srgb, var(--danger) 82%, #ffdada);
 }
 
 .all-errors-panel summary {
