@@ -50,8 +50,16 @@
     }
 
     function cycleMode() {
-        const currentIndex = MODES.indexOf(activeMode);
-        const nextMode = MODES[(currentIndex + 1) % MODES.length];
+        let nextMode;
+
+        if (activeMode === 'system') {
+            // Avoid a no-op by switching to the opposite of the current system theme.
+            nextMode = getSystemTheme() === 'dark' ? 'light' : 'dark';
+        } else {
+            const currentIndex = MODES.indexOf(activeMode);
+            nextMode = MODES[(currentIndex + 1) % MODES.length];
+        }
+
         localStorage.setItem(STORAGE_KEY, nextMode);
         applyMode(nextMode);
     }
