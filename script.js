@@ -152,8 +152,6 @@ function bindUIEvents() {
                 showErrorRecord(row.dataset.errorIndex, row.dataset.errorSource);
             }
         });
-        ui.results.addEventListener('mouseover', handleStatHover);
-        ui.results.addEventListener('mouseout', handleStatHoverEnd);
         ui.results.addEventListener('change', handleErrorFieldFilterChange);
     }
 
@@ -470,101 +468,79 @@ function handleStatClick(e) {
 
     if (statType.includes('bad record')) {
         filterErrorsByBadRecords();
+        togglePerFileBreakdownPanel('bad-records');
     } else if (statType.includes('error') && statType.includes('found')) {
         showErrorFieldBreakdown();
     } else if (statType.includes('pass rate')) {
-        showPassRateBreakdown();
+        togglePerFileBreakdownPanel('pass-rate');
+    } else if (statType.includes('good record')) {
+        togglePerFileBreakdownPanel('good-records');
     } else if (statType.includes('error severity')) {
         showErrorSeverityBreakdown();
     }
 }
 
-function handleStatHover(e) {
-    const stat = e.target.closest('.stat');
-    if (!stat) {
+function togglePerFileBreakdownPanel(statType) {
+    if (!ui || !ui.results) {
         return;
     }
 
-    const label = stat.querySelector('p');
-    if (!label) {
+    const panel = ui.results.querySelector('#statDetailsPanel');
+    const body = ui.results.querySelector('#statDetailsPanelBody');
+    const title = ui.results.querySelector('#statDetailsPanelTitle');
+    if (!panel || !body || !title) {
         return;
     }
 
-    const statType = label.textContent.trim().toLowerCase();
-    const fileBreakdown = statBreakdownState.errorsByFile;
-    if (Object.keys(fileBreakdown).length === 0) {
+    const activeType = panel.dataset.activeType || '';
+    if (!panel.hidden && activeType === statType) {
+        panel.hidden = true;
+        panel.dataset.activeType = '';
+        body.innerHTML = '';
         return;
     }
 
-    let tooltipContent = '';
-    if (statType.includes('pass rate')) {
-        tooltipContent = buildStatTooltip('Pass Rate by File', statBreakdownState.files.map(f => ({
-            file: f,
-            good: fileBreakdown[f]?.good || 0,
-            total: fileBreakdown[f]?.total || 0,
-            rate: fileBreakdown[f] ? (((fileBreakdown[f].good) / fileBreakdown[f].total) * 100).toFixed(1) : '0'
-        })));
-    } else if (statType.includes('good record')) {
-        tooltipContent = buildStatTooltip('Good Records by File', statBreakdownState.files.map(f => ({
-            file: f,
-            count: fileBreakdown[f]?.good || 0
-        })));
-    } else if (statType.includes('bad record')) {
-        tooltipContent = buildStatTooltip('Bad Records by File', statBreakdownState.files.map(f => ({
-            file: f,
-            count: fileBreakdown[f]?.bad || 0
-        })));
-    } else if (statType.includes('error') && statType.includes('found')) {
-        tooltipContent = buildStatTooltip('Errors by File', statBreakdownState.files.map(f => ({
-            file: f,
-            count: fileBreakdown[f]?.errors || 0
-        })));
-    } else if (statType.includes('error severity')) {
-        const severityBreakdown = buildErrorSeverityBreakdown(allErrorsPreview);
-        const lines = ['Error Types', '---'];
-        severityBreakdown.forEach(item => {
-            lines.push(`${item.severity}: ${item.count} (${item.percent}%)`);
+    const fileBreakdown = statBreakdownState.errorsByFile || {};
+    const files = statBreakdownState.files || [];
+    if (!files.length) {
+        return;
+    }
+
+    let panelTitle = '';
+    let rows = [];
+
+    if (statType === 'pass-rate') {
+        panelTitle = 'Pass Rate by File';
+        rows = files.map(file => {
+            const data = fileBreakdown[file] || { good: 0, total: 0 };
+            const rate = data.total > 0 ? ((data.good / data.total) * 100).toFixed(1) : '0.0';
+            return `<tr><td>${escapeHTML(file)}</td><td>${data.good}</td><td>${data.total}</td><td>${rate}%</td></tr>`;
         });
-        tooltipContent = lines.join('\n');
+    } else if (statType === 'good-records') {
+        panelTitle = 'Good Records by File';
+        rows = files.map(file => {
+            const data = fileBreakdown[file] || { good: 0 };
+            return `<tr><td>${escapeHTML(file)}</td><td>${data.good}</td></tr>`;
+        });
+    } else if (statType === 'bad-records') {
+        panelTitle = 'Bad Records by File';
+        rows = files.map(file => {
+            const data = fileBreakdown[file] || { bad: 0 };
+            return `<tr><td>${escapeHTML(file)}</td><td>${data.bad}</td></tr>`;
+        });
     }
 
-    if (tooltipContent) {
-        showStatTooltip(stat, tooltipContent);
+    if (!rows.length) {
+        return;
     }
-}
 
-function handleStatHoverEnd(e) {
-    const stat = e.target.closest('.stat');
-    if (stat) {
-        removeStatTooltip(stat);
-    }
-}
+    title.textContent = panelTitle;
+    body.innerHTML = statType === 'pass-rate'
+        ? `<table class="stat-details-table"><thead><tr><th>File</th><th>Good</th><th>Total</th><th>Pass Rate</th></tr></thead><tbody>${rows.join('')}</tbody></table>`
+        : `<table class="stat-details-table"><thead><tr><th>File</th><th>Count</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
 
-function buildStatTooltip(title, data) {
-    const lines = [title, '---'];
-    data.forEach(item => {
-        if (item.rate !== undefined) {
-            lines.push(`${item.file}: ${item.good}/${item.total} (${item.rate}%)`);
-        } else if (item.count !== undefined) {
-            lines.push(`${item.file}: ${item.count}`);
-        }
-    });
-    return lines.join('\n');
-}
-
-function showStatTooltip(stat, content) {
-    removeStatTooltip(stat);
-    const tooltip = document.createElement('div');
-    tooltip.className = 'stat-tooltip';
-    tooltip.textContent = content;
-    stat.appendChild(tooltip);
-}
-
-function removeStatTooltip(stat) {
-    const existingTooltip = stat.querySelector('.stat-tooltip');
-    if (existingTooltip) {
-        existingTooltip.remove();
-    }
+    panel.hidden = false;
+    panel.dataset.activeType = statType;
 }
 
 function filterErrorsByBadRecords() {
@@ -1373,6 +1349,15 @@ async function validateFiles() {
                         <p>Error Severity: ${mostCommonSeverity}</p>
                     </div>
                 </section>
+                <p class="stats-hint">Click a stat card to view detailed insights.</p>
+
+                <div id="statDetailsPanel" class="card stat-details-panel" hidden>
+                    <div class="stat-details-panel-header">
+                        <h3 id="statDetailsPanelTitle">Per-file breakdown</h3>
+                        <button type="button" class="stat-details-close" aria-label="Close per-file breakdown" onclick="this.closest('#statDetailsPanel').hidden = true">Close</button>
+                    </div>
+                    <div id="statDetailsPanelBody"></div>
+                </div>
 
                 <div id="resultsGateStatus" class="card">
                     <h3>${isPass ? '✅ Pipeline Ready' : '❌ Gate Failed'}</h3>
