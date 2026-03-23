@@ -526,6 +526,11 @@ function filterErrorsByBadRecords() {
         
         showAppNotice(`Filtered to ${badRecordErrors.length} errors from bad records.`, 'info');
     }
+
+    // Smooth scroll to All Errors section
+    setTimeout(() => {
+        allErrorsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
 }
 
 function showErrorFieldBreakdown() {
