@@ -50,7 +50,10 @@ function bindUIEvents() {
                 o.selected = !allSelected;
             });
             updateRequiredSelectionCount(ui.requiredFields);
+            updateSelectAllButtonLabel(ui.requiredFields, selectAllBtn);
         });
+
+        updateSelectAllButtonLabel(ui.requiredFields, selectAllBtn);
     }
 
     if (ui.validateBtn) {
@@ -184,6 +187,23 @@ function updateRequiredSelectionCount(selectElement) {
         const fieldNames = selected.map(o => o.textContent).join(', ');
         ui.requiredSelectionCount.textContent = `Selected: ${fieldNames}`;
     }
+
+    updateSelectAllButtonLabel(selectElement);
+}
+
+function updateSelectAllButtonLabel(selectElement, selectAllBtn = document.getElementById('selectAllBtn')) {
+    if (!selectElement || !selectAllBtn) {
+        return;
+    }
+
+    const hasOptions = selectElement.options.length > 0;
+    const allSelected = hasOptions && Array.from(selectElement.options).every(option => option.selected);
+    const buttonText = allSelected ? 'Deselect All' : 'Select All';
+    const actionLabel = allSelected ? 'Deselect all required fields' : 'Select all required fields';
+
+    selectAllBtn.textContent = buttonText;
+    selectAllBtn.setAttribute('aria-label', actionLabel);
+    selectAllBtn.setAttribute('title', actionLabel);
 }
 
 function handleErrorFieldFilterChange(e) {
