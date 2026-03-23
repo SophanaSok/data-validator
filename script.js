@@ -635,86 +635,100 @@ async function validateFiles() {
     const allFieldOptions = buildErrorFieldFilterOptions(allErrorsPreview);
 
     ui.results.innerHTML = `
-        <div class="stats-grid">
-            <div class="stat ${isPass ? 'pass' : 'fail'}">
-                <h3>${passRate}%</h3>
-                <p>Pass Rate</p>
-            </div>
-            <div class="stat">
-                <h3>${allGood.length}</h3>
-                <p>Good Records</p>
-            </div>
-            <div class="stat">
-                <h3>${allBad.length}</h3>
-                <p>Bad Records</p>
-            </div>
-            <div class="stat">
-                <h3>${allErrors.length}</h3>
-                <p>Errors Found</p>
-            </div>
-        </div>
+        <div class="results-layout">
+            <aside class="results-side-nav" aria-label="Validation results navigation">
+                <p class="results-side-nav-title">Jump to</p>
+                <a href="#resultsSummary" class="results-side-link">Summary</a>
+                <a href="#resultsGateStatus" class="results-side-link">Gate Status</a>
+                <a href="#resultsTopErrors" class="results-side-link">Top Errors</a>
+                <a href="#resultsAllErrors" class="results-side-link">All Errors</a>
+                <a href="#selectedErrorRecord" class="results-side-link">Selected Record</a>
+                <a href="#resultsDownloads" class="results-side-link">Downloads</a>
+            </aside>
 
-        <div class="card">
-            <h3>${isPass ? '✅ Pipeline Ready' : '❌ Gate Failed'}</h3>
-            <p>${totalRecords} total records across ${files.length} files</p>
-        </div>
+            <div class="results-main">
+                <section id="resultsSummary" class="stats-grid">
+                    <div class="stat ${isPass ? 'pass' : 'fail'}">
+                        <h3>${passRate}%</h3>
+                        <p>Pass Rate</p>
+                    </div>
+                    <div class="stat">
+                        <h3>${allGood.length}</h3>
+                        <p>Good Records</p>
+                    </div>
+                    <div class="stat">
+                        <h3>${allBad.length}</h3>
+                        <p>Bad Records</p>
+                    </div>
+                    <div class="stat">
+                        <h3>${allErrors.length}</h3>
+                        <p>Errors Found</p>
+                    </div>
+                </section>
 
-        <div class="card">
-            <h3>🔥 Top Errors</h3>
-            <div class="error-filter-row">
-                <label for="topErrorFieldFilter">Filter by field</label>
-                <select id="topErrorFieldFilter" class="error-field-filter" data-filter-source="top">
-                    ${topFieldOptions}
-                </select>
-                <span id="topErrorsCount" class="error-filter-count">${topErrorsPreview.length} of ${topErrorsPreview.length}</span>
-            </div>
-            <table>
-                <thead>
-                    <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
-                </thead>
-                <tbody id="topErrorsBody">
-                ${renderErrorRowsForTable(filterErrorsByField(topErrorsPreview, ''), 'top')}
-                </tbody>
-            </table>
-            <p class="error-row-hint">Click any error row to view the full JSON record.</p>
-        </div>
-
-        <div class="card">
-            <details class="all-errors-panel">
-                <summary>📚 All Errors (${allErrors.length})</summary>
-                <p class="error-row-hint">This section includes every error row (not capped). Click any row to inspect the full JSON record.</p>
-                <div class="error-filter-row">
-                    <label for="allErrorFieldFilter">Filter by field</label>
-                    <select id="allErrorFieldFilter" class="error-field-filter" data-filter-source="all">
-                        ${allFieldOptions}
-                    </select>
-                    <span id="allErrorsCount" class="error-filter-count">${allErrorsPreview.length} of ${allErrorsPreview.length}</span>
+                <div id="resultsGateStatus" class="card">
+                    <h3>${isPass ? '✅ Pipeline Ready' : '❌ Gate Failed'}</h3>
+                    <p>${totalRecords} total records across ${files.length} files</p>
                 </div>
-                <div class="all-errors-table-wrap">
+
+                <div id="resultsTopErrors" class="card">
+                    <h3>🔥 Top Errors</h3>
+                    <div class="error-filter-row">
+                        <label for="topErrorFieldFilter">Filter by field</label>
+                        <select id="topErrorFieldFilter" class="error-field-filter" data-filter-source="top">
+                            ${topFieldOptions}
+                        </select>
+                        <span id="topErrorsCount" class="error-filter-count">${topErrorsPreview.length} of ${topErrorsPreview.length}</span>
+                    </div>
                     <table>
                         <thead>
                             <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
                         </thead>
-                        <tbody id="allErrorsBody">
-                        ${renderErrorRowsForTable(filterErrorsByField(allErrorsPreview, ''), 'all')}
+                        <tbody id="topErrorsBody">
+                        ${renderErrorRowsForTable(filterErrorsByField(topErrorsPreview, ''), 'top')}
                         </tbody>
                     </table>
+                    <p class="error-row-hint">Click any error row to view the full JSON record.</p>
                 </div>
-            </details>
-        </div>
 
-        <div class="card" id="selectedErrorRecord">
-            <h3>🧾 Selected Error Record</h3>
-            <p class="error-row-hint">Highlighted key = field causing the validation error.</p>
-            <p id="errorRecordSummary">Select an error row above to inspect its full JSON payload.</p>
-            <pre id="errorRecordContent" class="record-viewer">No record selected.</pre>
-        </div>
+                <div id="resultsAllErrors" class="card">
+                    <details class="all-errors-panel">
+                        <summary>📚 All Errors (${allErrors.length})</summary>
+                        <p class="error-row-hint">This section includes every error row (not capped). Click any row to inspect the full JSON record.</p>
+                        <div class="error-filter-row">
+                            <label for="allErrorFieldFilter">Filter by field</label>
+                            <select id="allErrorFieldFilter" class="error-field-filter" data-filter-source="all">
+                                ${allFieldOptions}
+                            </select>
+                            <span id="allErrorsCount" class="error-filter-count">${allErrorsPreview.length} of ${allErrorsPreview.length}</span>
+                        </div>
+                        <div class="all-errors-table-wrap">
+                            <table>
+                                <thead>
+                                    <tr><th>File</th><th>Record #</th><th>Field</th><th>Value</th><th>Error</th></tr>
+                                </thead>
+                                <tbody id="allErrorsBody">
+                                ${renderErrorRowsForTable(filterErrorsByField(allErrorsPreview, ''), 'all')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                </div>
 
-        <div class="card">
-            <h3>⬇️ Downloads</h3>
-            <button class="success" onclick="download('good-bids.json', lastValidationData.good)">✅ Good Records JSON</button>
-            <button class="danger" onclick="download('bad-bids.json', lastValidationData.bad)">❌ Bad Records JSON</button>
-            <button onclick="download('errors.csv', toCSV(lastValidationData.errors))">📊 Error Report CSV</button>
+                <div class="card" id="selectedErrorRecord">
+                    <h3>🧾 Selected Error Record</h3>
+                    <p class="error-row-hint">Highlighted key = field causing the validation error.</p>
+                    <p id="errorRecordSummary">Select an error row above to inspect its full JSON payload.</p>
+                    <pre id="errorRecordContent" class="record-viewer">No record selected.</pre>
+                </div>
+
+                <div id="resultsDownloads" class="card">
+                    <h3>⬇️ Downloads</h3>
+                    <button class="success" onclick="download('good-bids.json', lastValidationData.good)">✅ Good Records JSON</button>
+                    <button class="danger" onclick="download('bad-bids.json', lastValidationData.bad)">❌ Bad Records JSON</button>
+                    <button onclick="download('errors.csv', toCSV(lastValidationData.errors))">📊 Error Report CSV</button>
+                </div>
+            </div>
         </div>
     `;
 }
