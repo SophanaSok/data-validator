@@ -73,7 +73,7 @@
               "type": "object",
               "properties": {
                 "Title": { "type": "string", "minLength": 1 },
-                "URL": { "type": "string", "minLength": 1 },
+                "URL": { "type": "string", "format": "uri", "minLength": 1 },
                 "Hash": { "type": "string", "minLength": 1 }
               },
               "required": ["Title", "URL", "Hash"]

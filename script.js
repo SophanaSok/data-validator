@@ -1634,10 +1634,13 @@ function validateBySchema(value, schema, path, errors, requiredFields) {
                 errors.push({ instancePath: path, message: `must be equal to one of the allowed values: ${schema.enum.join(', ')}` });
             }
 
-            if (schema.format === 'uri') {
+            const isBidDocumentUrl = isBidDocumentUrlPath(path);
+            const mustValidateUri = schema.format === 'uri' || isBidDocumentUrl;
+
+            if (mustValidateUri) {
                 let parsedUri;
                 try {
-                    parsedUri = new URL(value);
+                    parsedUri = new URL(value.trim());
                     if (!parsedUri.protocol || !parsedUri.host) {
                         errors.push({ instancePath: path, message: 'must match format "uri"' });
                     }
@@ -1645,7 +1648,7 @@ function validateBySchema(value, schema, path, errors, requiredFields) {
                     errors.push({ instancePath: path, message: 'must match format "uri"' });
                 }
 
-                if (parsedUri && isBidDocumentUrlPath(path)) {
+                if (parsedUri && isBidDocumentUrl) {
                     const extension = getUrlFileExtension(value);
                     if (!ALLOWED_BID_DOCUMENT_EXTENSIONS.has(extension)) {
                         errors.push({ instancePath: path, message: 'must reference a .doc, .docx, .xls, .xlsx, or .pdf file' });

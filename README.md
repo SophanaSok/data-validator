@@ -173,6 +173,33 @@ Bid document URL rule:
 - The URL path must end with one of these file extensions: `.doc`, `.docx`, `.xls`, `.xlsx`, `.pdf`.
 - Any other file extension (or no extension) fails validation.
 
+Quick verification example:
+
+```json
+{
+  "Export": [
+    {
+      "BidDocuments": [
+        {
+          "Title": "Specs",
+          "URL": "https://example.com/files/specifications.pdf",
+          "Hash": "ok"
+        },
+        {
+          "Title": "Photo",
+          "URL": "https://example.com/files/site-photo.jpg",
+          "Hash": "bad"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Expected result:
+- `.pdf` URL passes this rule.
+- `.jpg` URL fails with: `must reference a .doc, .docx, .xls, .xlsx, or .pdf file`.
+
 High-level flow:
 1. You choose required fields and click **Apply to Schema**.
 2. The app writes those fields into `schema.properties.Export.items.required`.
