@@ -160,7 +160,10 @@ No installation is required.
   - Collapsed by default.
   - Optional filters for narrowing rows by error field and value text.
   - Sortable columns (`File`, `Record #`, `Field`, `Value`, `Error`) with ascending/descending toggle.
-  - Expand to see every error row (uncapped).
+  - Incremental rendering with **Load more** to avoid UI lockups on very large result sets.
+  - Optional **Render all progressively** mode streams rows in animation-frame batches.
+  - Configurable **Max rows** safety cap prevents accidental DOM overload on massive datasets.
+  - Supports scoped quick-filters (for example severity/bad-record views) with a **Show all errors** reset action.
   - Click row to load record detail panel and auto-scroll to it.
   - Keyboard accessible with `Tab`, `Enter`, or `Space`.
 

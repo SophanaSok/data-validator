@@ -8,6 +8,19 @@ let errorSortState = {
     top: { key: null, direction: 'asc' },
     all: { key: null, direction: 'asc' }
 };
+const ALL_ERRORS_INITIAL_RENDER_COUNT = 200;
+const ALL_ERRORS_RENDER_STEP = 200;
+const DEFAULT_ALL_ERRORS_RENDER_LIMIT = 5000;
+const MIN_ALL_ERRORS_RENDER_LIMIT = 100;
+const MAX_ALL_ERRORS_RENDER_LIMIT = 50000;
+const MAX_RECORD_PREVIEW_CHARACTERS = 250000;
+let allErrorsVisibleCount = ALL_ERRORS_INITIAL_RENDER_COUNT;
+let allErrorsScopedFilter = null;
+let allErrorsRenderLimit = DEFAULT_ALL_ERRORS_RENDER_LIMIT;
+let allErrorsAutoRenderActive = false;
+let allErrorsAutoRenderFrameId = null;
+let allErrorsLastFilteredCount = 0;
+let allErrorsLastRenderableCount = 0;
 let statBreakdownState = {
     files: [],
     badRecordIndices: new Set(),
@@ -126,6 +139,9 @@ function bindUIEvents() {
     if (ui.results) {
         ui.results.addEventListener('click', handleStatClick);
         ui.results.addEventListener('click', handleTopErrorFieldInsightClick);
+        ui.results.addEventListener('click', handleErrorLoadMoreClick);
+        ui.results.addEventListener('click', handleErrorAutoRenderClick);
+        ui.results.addEventListener('click', handleClearAllErrorsScopeClick);
         ui.results.addEventListener('click', handleErrorSortHeaderClick);
         ui.results.addEventListener('click', handleTopErrorRowClick);
         ui.results.addEventListener('keydown', e => {
@@ -235,18 +251,24 @@ function updateSelectAllButtonLabel(selectElement, selectAllBtn = document.getEl
 }
 
 function handleErrorFilterChange(e) {
-    const filter = e.target.closest('.error-field-filter, .error-value-filter');
+    const filter = e.target.closest('.error-field-filter, .error-value-filter, .error-render-limit');
     if (!filter) {
         return;
     }
 
-    applyErrorFilters(filter.dataset.filterSource);
+    if (filter.dataset.filterSource === 'all') {
+        stopAllErrorsAutoRender();
+    }
+
+    applyErrorFilters(filter.dataset.filterSource, { resetVisible: true });
 }
 
-function applyErrorFilters(source) {
+function applyErrorFilters(source, options = {}) {
     if (!ui || !ui.results) {
         return;
     }
+
+    const resetVisible = options.resetVisible !== false;
 
     const sourceKey = source === 'all' ? 'all' : 'top';
     const sourceErrors = sourceKey === 'all' ? allErrorsPreview : topErrorsPreview;
@@ -256,12 +278,39 @@ function applyErrorFilters(source) {
     const selectedField = selectedFieldElement ? selectedFieldElement.value : '';
     const valueQuery = valueQueryElement ? valueQueryElement.value : '';
 
-    const filteredEntries = filterErrorEntries(sourceErrors, selectedField, valueQuery);
+    if (sourceKey === 'all' && resetVisible) {
+        allErrorsVisibleCount = ALL_ERRORS_INITIAL_RENDER_COUNT;
+    }
+
+    const filteredEntries = filterErrorEntries(
+        sourceErrors,
+        selectedField,
+        valueQuery,
+        sourceKey === 'all' ? allErrorsScopedFilter : null
+    );
+
+    if (sourceKey === 'all') {
+        allErrorsRenderLimit = getAllErrorsRenderLimit();
+    }
+
     const sortedEntries = sortErrorEntries(filteredEntries, sourceKey);
+    const renderableCount = sourceKey === 'all' ? Math.min(sortedEntries.length, allErrorsRenderLimit) : sortedEntries.length;
+    const maxRows = sourceKey === 'all' ? Math.min(allErrorsVisibleCount, renderableCount) : sortedEntries.length;
+    const visibleEntries = sortedEntries.slice(0, maxRows);
+
+    if (sourceKey === 'all') {
+        allErrorsLastFilteredCount = sortedEntries.length;
+        allErrorsLastRenderableCount = renderableCount;
+
+        // Stop auto-render when finished or when there is nothing more to render.
+        if (allErrorsVisibleCount >= renderableCount) {
+            stopAllErrorsAutoRender();
+        }
+    }
 
     const tableBody = ui.results.querySelector(sourceKey === 'all' ? '#allErrorsBody' : '#topErrorsBody');
     if (tableBody) {
-        tableBody.innerHTML = renderErrorRowsForTable(sortedEntries, sourceKey);
+        tableBody.innerHTML = renderErrorRowsForTable(visibleEntries, sourceKey);
     }
 
     const tableHead = ui.results.querySelector(sourceKey === 'all' ? '#allErrorsHead' : '#topErrorsHead');
@@ -269,11 +318,150 @@ function applyErrorFilters(source) {
         tableHead.innerHTML = renderErrorTableHead(sourceKey);
     }
 
-    const countText = `${filteredEntries.length} of ${sourceErrors.length}`;
+    const countText = sourceKey === 'all'
+        ? `${visibleEntries.length} shown of ${filteredEntries.length} filtered (${sourceErrors.length} total)`
+        : `${filteredEntries.length} of ${sourceErrors.length}`;
     const countTarget = ui.results.querySelector(sourceKey === 'all' ? '#allErrorsCount' : '#topErrorsCount');
     if (countTarget) {
         countTarget.textContent = countText;
     }
+
+    if (sourceKey === 'all') {
+        updateAllErrorsRenderControls(filteredEntries.length, renderableCount, visibleEntries.length);
+    }
+}
+
+function getAllErrorsRenderLimit() {
+    if (!ui || !ui.results) {
+        return DEFAULT_ALL_ERRORS_RENDER_LIMIT;
+    }
+
+    const input = ui.results.querySelector('#allErrorsMaxRenderRows');
+    const parsed = Number(input ? input.value : DEFAULT_ALL_ERRORS_RENDER_LIMIT);
+    const normalized = Number.isFinite(parsed)
+        ? Math.max(MIN_ALL_ERRORS_RENDER_LIMIT, Math.min(MAX_ALL_ERRORS_RENDER_LIMIT, Math.floor(parsed)))
+        : DEFAULT_ALL_ERRORS_RENDER_LIMIT;
+
+    if (input) {
+        input.value = String(normalized);
+    }
+
+    return normalized;
+}
+
+function updateAllErrorsRenderControls(filteredCount, renderableCount, visibleCount) {
+    if (!ui || !ui.results) {
+        return;
+    }
+
+    const status = ui.results.querySelector('#allErrorsRenderStatus');
+    if (status) {
+        const capSuffix = filteredCount > renderableCount
+            ? ` (cap ${allErrorsRenderLimit} rows)`
+            : '';
+        status.textContent = `Rendering ${visibleCount} of ${renderableCount} renderable rows${capSuffix}`;
+    }
+
+    const loadMoreBtn = ui.results.querySelector('#allErrorsLoadMore');
+    if (loadMoreBtn) {
+        const remaining = Math.max(0, renderableCount - visibleCount);
+        if (remaining > 0) {
+            loadMoreBtn.hidden = false;
+            const nextStep = Math.min(ALL_ERRORS_RENDER_STEP, remaining);
+            loadMoreBtn.textContent = `Load ${nextStep} more`;
+        } else {
+            loadMoreBtn.hidden = true;
+        }
+    }
+
+    const autoRenderBtn = ui.results.querySelector('#allErrorsAutoRender');
+    if (autoRenderBtn) {
+        const remaining = Math.max(0, renderableCount - visibleCount);
+        if (remaining > 0) {
+            autoRenderBtn.hidden = false;
+            autoRenderBtn.textContent = allErrorsAutoRenderActive ? 'Stop progressive render' : 'Render all progressively';
+        } else {
+            autoRenderBtn.hidden = true;
+        }
+    }
+
+    const clearScopeBtn = ui.results.querySelector('#clearAllErrorsScope');
+    if (clearScopeBtn) {
+        clearScopeBtn.hidden = !allErrorsScopedFilter;
+    }
+}
+
+function stopAllErrorsAutoRender() {
+    allErrorsAutoRenderActive = false;
+    if (allErrorsAutoRenderFrameId !== null) {
+        cancelAnimationFrame(allErrorsAutoRenderFrameId);
+        allErrorsAutoRenderFrameId = null;
+    }
+}
+
+function scheduleAllErrorsAutoRender() {
+    if (!allErrorsAutoRenderActive || !ui || !ui.results) {
+        stopAllErrorsAutoRender();
+        return;
+    }
+
+    const remaining = Math.max(0, allErrorsLastRenderableCount - allErrorsVisibleCount);
+    if (remaining <= 0) {
+        stopAllErrorsAutoRender();
+        applyErrorFilters('all', { resetVisible: false });
+        return;
+    }
+
+    allErrorsAutoRenderFrameId = requestAnimationFrame(() => {
+        allErrorsVisibleCount += Math.min(ALL_ERRORS_RENDER_STEP, remaining);
+        applyErrorFilters('all', { resetVisible: false });
+        if (allErrorsAutoRenderActive) {
+            scheduleAllErrorsAutoRender();
+        }
+    });
+}
+
+function handleErrorLoadMoreClick(e) {
+    const button = e.target.closest('.error-load-more');
+    if (!button) {
+        return;
+    }
+
+    const source = button.dataset.filterSource === 'all' ? 'all' : 'top';
+    if (source === 'all') {
+        stopAllErrorsAutoRender();
+        allErrorsVisibleCount += ALL_ERRORS_RENDER_STEP;
+    }
+
+    applyErrorFilters(source, { resetVisible: false });
+}
+
+function handleErrorAutoRenderClick(e) {
+    const button = e.target.closest('.error-auto-render');
+    if (!button || !ui || !ui.results) {
+        return;
+    }
+
+    if (allErrorsAutoRenderActive) {
+        stopAllErrorsAutoRender();
+        applyErrorFilters('all', { resetVisible: false });
+        return;
+    }
+
+    allErrorsAutoRenderActive = true;
+    applyErrorFilters('all', { resetVisible: false });
+    scheduleAllErrorsAutoRender();
+}
+
+function handleClearAllErrorsScopeClick(e) {
+    const button = e.target.closest('#clearAllErrorsScope');
+    if (!button || !ui || !ui.results) {
+        return;
+    }
+
+    allErrorsScopedFilter = null;
+    stopAllErrorsAutoRender();
+    applyErrorFilters('all', { resetVisible: true });
 }
 
 function handleErrorSortHeaderClick(e) {
@@ -296,7 +484,10 @@ function handleErrorSortHeaderClick(e) {
         state.direction = 'asc';
     }
 
-    applyErrorFilters(source);
+    if (source === 'all') {
+        stopAllErrorsAutoRender();
+    }
+    applyErrorFilters(source, { resetVisible: false });
 }
 
 function renderErrorTableHead(source) {
@@ -599,21 +790,19 @@ function filterErrorsByBadRecords() {
     const filterSelect = ui.results.querySelector('#allErrorFieldFilter');
     if (filterSelect) {
         filterSelect.value = '';
-        filterSelect.dispatchEvent(new Event('change'));
     }
 
-    const tableBody = ui.results.querySelector('#allErrorsBody');
-    if (tableBody) {
-        const badRecordErrors = allErrorsPreview.filter((err, idx) => 
-            statBreakdownState.badRecordIndices.has(idx)
-        );
-        
-        const entries = badRecordErrors.map((error, index) => ({ error, index }));
-        const sortedEntries = sortErrorEntries(entries, 'all');
-        tableBody.innerHTML = renderErrorRowsForTable(sortedEntries, 'all');
-        
-        showAppNotice(`Filtered to ${badRecordErrors.length} errors from bad records.`, 'info');
+    const valueFilter = ui.results.querySelector('#allErrorValueFilter');
+    if (valueFilter) {
+        valueFilter.value = '';
     }
+
+    stopAllErrorsAutoRender();
+    allErrorsScopedFilter = (error, index) => statBreakdownState.badRecordIndices.has(index);
+    applyErrorFilters('all', { resetVisible: true });
+
+    const badRecordErrorCount = allErrorsPreview.filter((_, idx) => statBreakdownState.badRecordIndices.has(idx)).length;
+    showAppNotice(`Filtered to ${badRecordErrorCount} errors from bad records.`, 'info');
 
     // Smooth scroll to All Errors section
     setTimeout(() => {
@@ -681,6 +870,7 @@ function showErrorFieldBreakdown() {
 function filterAllErrorsByField(field) {
     const filterSelect = ui.results.querySelector('#allErrorFieldFilter');
     if (filterSelect) {
+        stopAllErrorsAutoRender();
         filterSelect.value = field === '(root)' ? '' : field;
         // Dispatch change event on the select element itself, not on results container
         // (change events on select don't bubble, so listeners on parent won't catch them)
@@ -822,12 +1012,19 @@ function filterAllErrorsBySeverity(severity) {
             details.open = true;
         }
 
-        const tableBody = ui.results.querySelector('#allErrorsBody');
-        if (tableBody) {
-            const entries = severityErrors.map((error, index) => ({ error, index }));
-            const sortedEntries = sortErrorEntries(entries, 'all');
-            tableBody.innerHTML = renderErrorRowsForTable(sortedEntries, 'all');
+        const filterSelect = ui.results.querySelector('#allErrorFieldFilter');
+        if (filterSelect) {
+            filterSelect.value = '';
         }
+
+        const valueFilter = ui.results.querySelector('#allErrorValueFilter');
+        if (valueFilter) {
+            valueFilter.value = '';
+        }
+
+        stopAllErrorsAutoRender();
+        allErrorsScopedFilter = (error) => getErrorSeverityType(error.message) === severity;
+        applyErrorFilters('all', { resetVisible: true });
 
         setTimeout(() => {
             allErrorsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -961,14 +1158,15 @@ function showErrorRecord(indexValue, source = 'top') {
         return;
     }
 
-    const renderedRecord = renderRecordWithHighlightedKey(selected.record, selected.path);
+    const renderedRecord = renderRecordWithHighlightSafeguard(selected.record, selected.path);
     const keyMissingNote = !renderedRecord.foundHighlight
         && selected.path
         && /required/i.test(String(selected.message || ''))
         ? ' | key missing in record'
         : '';
+    const previewTruncatedNote = renderedRecord.truncated ? ' | preview truncated for performance' : '';
 
-    summary.textContent = `${selected.file} | record ${selected.index} | ${selected.field} | ${selected.message}${keyMissingNote}`;
+    summary.textContent = `${selected.file} | record ${selected.index} | ${selected.field} | ${selected.message}${keyMissingNote}${previewTruncatedNote}`;
     content.innerHTML = renderedRecord.html;
 
     const selectedErrorCard = ui.results.querySelector('#selectedErrorRecord');
@@ -999,12 +1197,13 @@ function buildErrorFieldFilterOptions(errors) {
         .join('');
 }
 
-function filterErrorEntries(errors, selectedField, valueQuery = '') {
+function filterErrorEntries(errors, selectedField, valueQuery = '', includeEntry = null) {
     const expectedField = String(selectedField || '');
     const expectedValue = String(valueQuery || '').trim().toLowerCase();
 
     return (errors || [])
         .map((error, index) => ({ error, index }))
+        .filter(({ error, index }) => !includeEntry || includeEntry(error, index))
         .filter(({ error }) => !expectedField || error.field === expectedField)
         .filter(({ error }) => {
             if (!expectedValue) {
@@ -1032,6 +1231,29 @@ function renderErrorRowsForTable(entries, source) {
             </tr>
         `)
         .join('');
+}
+
+function renderRecordWithHighlightSafeguard(record, errorPath) {
+    let serialized = '';
+    try {
+        serialized = JSON.stringify(record);
+    } catch {
+        return renderRecordWithHighlightedKey(record, errorPath);
+    }
+
+    if (typeof serialized === 'string' && serialized.length > MAX_RECORD_PREVIEW_CHARACTERS) {
+        const truncated = `${serialized.slice(0, MAX_RECORD_PREVIEW_CHARACTERS)}...`;
+        return {
+            html: `<span class="json-null">Record preview truncated to ${MAX_RECORD_PREVIEW_CHARACTERS} characters for performance.</span>\n${escapeHTML(truncated)}`,
+            foundHighlight: false,
+            truncated: true
+        };
+    }
+
+    return {
+        ...renderRecordWithHighlightedKey(record, errorPath),
+        truncated: false
+    };
 }
 
 function parsePathTokens(path) {
@@ -1307,6 +1529,10 @@ async function validateFiles() {
         top: { key: null, direction: 'asc' },
         all: { key: null, direction: 'asc' }
     };
+    allErrorsVisibleCount = ALL_ERRORS_INITIAL_RENDER_COUNT;
+    allErrorsScopedFilter = null;
+    allErrorsRenderLimit = DEFAULT_ALL_ERRORS_RENDER_LIMIT;
+    stopAllErrorsAutoRender();
 
     // Build stat breakdown state for interactive features
     const fileSet = new Set();
@@ -1424,7 +1650,7 @@ async function validateFiles() {
                 <div id="resultsAllErrors" class="card">
                     <details class="all-errors-panel">
                         <summary>📚 All Errors (${allErrors.length})</summary>
-                        <p class="error-row-hint">This section includes every error row (not capped). Click any row to inspect the full JSON record.</p>
+                        <p class="error-row-hint">Rows render incrementally for performance. Use Load more to view additional rows, then click any row to inspect the full JSON record.</p>
                         <div class="error-filter-row">
                             <label for="allErrorFieldFilter">Filter by field</label>
                             <select id="allErrorFieldFilter" class="error-field-filter" data-filter-source="all">
@@ -1432,7 +1658,15 @@ async function validateFiles() {
                             </select>
                             <label for="allErrorValueFilter">Filter by value</label>
                             <input id="allErrorValueFilter" class="error-value-filter" data-filter-source="all" type="search" placeholder="Contains value text..." aria-label="Filter errors by value">
-                            <span id="allErrorsCount" class="error-filter-count">${allErrorsPreview.length} of ${allErrorsPreview.length}</span>
+                            <span id="allErrorsCount" class="error-filter-count">${Math.min(ALL_ERRORS_INITIAL_RENDER_COUNT, allErrorsPreview.length)} shown of ${allErrorsPreview.length} filtered (${allErrorsPreview.length} total)</span>
+                        </div>
+                        <div class="error-render-controls">
+                            <label for="allErrorsMaxRenderRows">Max rows</label>
+                            <input id="allErrorsMaxRenderRows" class="error-render-limit" data-filter-source="all" type="number" min="${MIN_ALL_ERRORS_RENDER_LIMIT}" max="${MAX_ALL_ERRORS_RENDER_LIMIT}" step="100" value="${DEFAULT_ALL_ERRORS_RENDER_LIMIT}" aria-label="Maximum rows to render in All Errors">
+                            <span id="allErrorsRenderStatus" class="error-filter-count">Rendering ${Math.min(ALL_ERRORS_INITIAL_RENDER_COUNT, Math.min(allErrorsPreview.length, DEFAULT_ALL_ERRORS_RENDER_LIMIT))} of ${Math.min(allErrorsPreview.length, DEFAULT_ALL_ERRORS_RENDER_LIMIT)} renderable rows${allErrorsPreview.length > DEFAULT_ALL_ERRORS_RENDER_LIMIT ? ` (cap ${DEFAULT_ALL_ERRORS_RENDER_LIMIT} rows)` : ''}</span>
+                            <button type="button" id="allErrorsLoadMore" class="error-load-more" data-filter-source="all" ${allErrorsPreview.length > ALL_ERRORS_INITIAL_RENDER_COUNT ? '' : 'hidden'}>Load more</button>
+                            <button type="button" id="allErrorsAutoRender" class="error-auto-render" data-filter-source="all" ${allErrorsPreview.length > ALL_ERRORS_INITIAL_RENDER_COUNT ? '' : 'hidden'}>Render all progressively</button>
+                            <button type="button" id="clearAllErrorsScope" class="error-clear-scope" hidden>Show all errors</button>
                         </div>
                         <div class="all-errors-table-wrap">
                             <table>
@@ -1440,7 +1674,7 @@ async function validateFiles() {
                                     ${renderErrorTableHead('all')}
                                 </thead>
                                 <tbody id="allErrorsBody">
-                                ${renderErrorRowsForTable(filterErrorEntries(allErrorsPreview, '', ''), 'all')}
+                                ${renderErrorRowsForTable(filterErrorEntries(allErrorsPreview, '', '').slice(0, ALL_ERRORS_INITIAL_RENDER_COUNT), 'all')}
                                 </tbody>
                             </table>
                         </div>

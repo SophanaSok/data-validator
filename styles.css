@@ -802,6 +802,44 @@ tr:hover {
     font-size: 0.85rem;
 }
 
+.error-render-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: -0.2rem 0 0.75rem;
+}
+
+.error-load-more,
+.error-auto-render,
+.error-clear-scope {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.error-render-controls label {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.error-render-limit {
+    width: 130px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.error-clear-scope {
+    background: color-mix(in srgb, var(--card) 84%, var(--text) 16%);
+    color: var(--text);
+}
+
+.error-clear-scope:hover {
+    background: color-mix(in srgb, var(--card) 72%, var(--text) 28%);
+}
+
 [data-theme="dark"] .error-row-hint {
     color: color-mix(in srgb, var(--text) 64%, transparent);
 }
@@ -1008,6 +1046,14 @@ tbody tr:nth-child(even) {
         width: 100%;
         max-width: none;
         min-width: 0;
+    }
+
+    .error-render-controls {
+        align-items: stretch;
+    }
+
+    .error-render-limit {
+        width: 100%;
     }
 
     .results-layout {
