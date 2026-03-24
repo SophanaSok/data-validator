@@ -200,6 +200,12 @@ Expected result:
 - `.pdf` URL passes this rule.
 - `.jpg` URL fails with: `must reference a .doc, .docx, .xls, .xlsx, or .pdf file`.
 
+Regression check for `BidDocuments[].URL` value rendering:
+1. Validate the sample above.
+2. Open **All Errors**.
+3. Locate the row where **Field** is `BidDocuments[].URL` and **Error** is `must reference a .doc, .docx, .xls, .xlsx, or .pdf file`.
+4. Confirm **Value** shows `https://example.com/files/site-photo.jpg` (the mismatched URL), not `(empty)`.
+
 High-level flow:
 1. You choose required fields and click **Apply to Schema**.
 2. The app writes those fields into `schema.properties.Export.items.required`.
