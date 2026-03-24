@@ -1715,19 +1715,37 @@ function getFieldValuesByPath(item, path) {
             return [];
         }
 
+        // Validation can parse stringified JSON arrays/objects on the fly.
+        // Mirror that behavior so error value lookup follows the same structure.
+        let currentValue = current;
+        if (typeof currentValue === 'string') {
+            const trimmed = currentValue.trim();
+            const looksStructured = trimmed.startsWith('{') || trimmed.startsWith('[');
+            if (looksStructured) {
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    if (parsed && typeof parsed === 'object') {
+                        currentValue = parsed;
+                    }
+                } catch {
+                    // Keep original string when parsing fails.
+                }
+            }
+        }
+
         const token = tokens[index];
 
         if (/^\d+$/.test(token)) {
-            if (!Array.isArray(current)) {
+            if (!Array.isArray(currentValue)) {
                 return [];
             }
 
-            return walk(current[Number(token)], index + 1);
+            return walk(currentValue[Number(token)], index + 1);
         }
 
         if (token.endsWith('[]')) {
             const arrayKey = token.slice(0, -2);
-            const source = arrayKey ? current[arrayKey] : current;
+            const source = arrayKey ? currentValue[arrayKey] : currentValue;
 
             if (!Array.isArray(source)) {
                 return [];
@@ -1736,7 +1754,7 @@ function getFieldValuesByPath(item, path) {
             return source.flatMap(entry => walk(entry, index + 1));
         }
 
-        return walk(current[token], index + 1);
+        return walk(currentValue[token], index + 1);
     }
 
     return walk(item, 0);

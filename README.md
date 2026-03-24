@@ -209,6 +209,22 @@ Regression check for `BidDocuments[].URL` value rendering:
 3. Locate the row where **Field** is `BidDocuments[].URL` and **Error** is `must reference a .doc, .docx, .xls, .xlsx, or .pdf file`.
 4. Confirm **Value** shows `https://example.com/files/site-photo.jpg` (the mismatched URL), not `(empty)`.
 
+Regression check for stringified `BidDocuments` payloads:
+
+```json
+{
+  "Export": [
+    {
+      "BidDocuments": "[{\"Title\":\"Photo\",\"URL\":\"https://example.com/files/site-photo.jpg\",\"Hash\":\"bad\"}]"
+    }
+  ]
+}
+```
+
+Expected result:
+1. Validation still reports `must reference a .doc, .docx, .xls, .xlsx, or .pdf file`.
+2. In **All Errors**, the **Value** column shows `https://example.com/files/site-photo.jpg` (not `(empty)`).
+
 High-level flow:
 1. You choose required fields and click **Apply to Schema**.
 2. The app writes those fields into `schema.properties.Export.items.required`.
@@ -217,7 +233,7 @@ High-level flow:
    - Good records
    - Bad records
    - Error details per failing field
-5. The app shows a summary, an **All Errors** panel (uncapped and collapsed by default), and download buttons.
+5. The app shows a summary, an **All Errors** panel (collapsed by default with incremental rendering controls), and download buttons.
 6. The app also shows a side navigation for quick in-results section jumps.
 
 ## Current Features
