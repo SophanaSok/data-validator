@@ -168,8 +168,8 @@ No installation is required.
 
 The validator checks each input record against the schema in the JSON Schema editor.
 
-Bid document URL rule:
-- `BidDocuments[].URL` must be a valid URI.
+Document URL rule:
+- `BidDocuments[].URL`, `AddendumDocuments[].URL`, `BidTabulations[].URL`, and `AwardDocuments[].URL` must be valid URIs.
 - The URL path must end with one of these file extensions: `.doc`, `.docx`, `.xls`, `.xlsx`, `.pdf`.
 - Any other file extension (or no extension) fails validation.
 
@@ -243,7 +243,7 @@ High-level flow:
 - Syntax-highlighted JSON in Selected Error Record viewer.
 - Selected record key highlighting for the exact field/path causing each error.
 - Nested-path fallback highlighting that marks the nearest parent key when an exact nested match is not renderable (for example some `BidDocuments[]` errors).
-- `BidDocuments[].URL` file-type validation (only `.doc`, `.docx`, `.xls`, `.xlsx`, `.pdf` are accepted).
+- Document URL file-type validation for `BidDocuments[]`, `AddendumDocuments[]`, `BidTabulations[]`, and `AwardDocuments[]` (only `.doc`, `.docx`, `.xls`, `.xlsx`, `.pdf` are accepted).
 - In-view legend text explaining highlighted key behavior.
 - Missing-key summary hint for required-field errors when the key does not exist in the record.
 - Export buttons:
@@ -264,7 +264,10 @@ The built-in required-field options include:
 
 **Additional fields (sorted alphabetically):**
 - `AwardDate`
+- `AddendumDocuments[]`
+- `AwardDocuments[]`
 - `BidDocuments[]`
+- `BidTabulations[]`
 - `BidStatus`
 - `BidType`
 - `BidURL`
@@ -277,7 +280,7 @@ The built-in required-field options include:
 
 Notes:
 - The four fields listed above are selected by default when the app loads.
-- `BidDocuments[]` is normalized to `BidDocuments` when applied.
+- `BidDocuments[]`, `AddendumDocuments[]`, `BidTabulations[]`, and `AwardDocuments[]` are normalized by removing `[]` when applied.
 - Manual required fields are merged with selected fields.
 - Duplicate field names are removed automatically.
 - You can select or deselect any field with a single click before applying to schema.
@@ -404,14 +407,14 @@ Fix:
 - Ensure those fields are required if you want strict checks.
 - Or update validator logic in `script.js` if you want format checks on optional fields too.
 
-### BidDocuments errors appear when not selected
+### Document array errors appear when not selected
 
 Cause:
-- The schema likely still marks `BidDocuments` as required.
+- The schema likely still marks one or more document arrays (`BidDocuments`, `AddendumDocuments`, `BidTabulations`, `AwardDocuments`) as required.
 
 Fix:
-- Deselect `BidDocuments[]` in required fields and click **Apply to Schema** again.
-- Confirm `BidDocuments` is not listed under `schema.properties.Export.items.required`.
+- Deselect document array fields in required fields and click **Apply to Schema** again.
+- Confirm those keys are not listed under `schema.properties.Export.items.required`.
 
 ### Error row click does nothing
 
@@ -462,7 +465,7 @@ Fix:
 - Added row-click support in **All Errors** to open **Selected Error Record**.
 - Added key-level highlighting in **Selected Error Record** for the field/path causing the selected error.
 - Added an inline legend and missing-key summary hint for required-field errors.
-- Adjusted required-field behavior so unselected fields (such as `BidDocuments[]`) are not validated.
+- Adjusted required-field behavior so unselected fields (such as document arrays) are not validated.
 - Expanded date-time acceptance to include ISO date-only and slash date values (for example `03/05/2026`).
 - Added inline UI guidance clarifying required-field validation behavior.
 - Added field filter and sorting for the **All Errors** table.

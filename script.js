@@ -1512,9 +1512,16 @@ function formatFieldValue(value) {
 }
 
 const ALLOWED_BID_DOCUMENT_EXTENSIONS = new Set(['doc', 'docx', 'xls', 'xlsx', 'pdf']);
+const DOCUMENT_URL_FIELDS = new Set(['BidDocuments', 'AddendumDocuments', 'BidTabulations', 'AwardDocuments']);
 
 function isBidDocumentUrlPath(path) {
-    return /^\/BidDocuments\/\d+\/URL$/.test(String(path || ''));
+    const tokens = String(path || '').split('/').filter(Boolean);
+    if (tokens.length !== 3) {
+        return false;
+    }
+
+    const [collection, index, field] = tokens;
+    return DOCUMENT_URL_FIELDS.has(collection) && /^\d+$/.test(index) && field === 'URL';
 }
 
 function getUrlFileExtension(urlValue) {

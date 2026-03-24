@@ -38,7 +38,7 @@
             </div>
             <select id="requiredFields" multiple>
                 <option selected>AgentName</option><option selected>AgentID</option><option selected>LegacyAgentID</option><option selected>ResourceURL</option>
-                <option>AwardDate</option><option value="BidDocuments">BidDocuments[]</option><option>BidStatus</option><option>BidType</option>
+              <option>AwardDate</option><option value="BidDocuments">BidDocuments[]</option><option value="AddendumDocuments">AddendumDocuments[]</option><option value="BidTabulations">BidTabulations[]</option><option value="AwardDocuments">AwardDocuments[]</option><option>BidStatus</option><option>BidType</option>
                 <option>BidURL</option><option>Description</option>
                 <option>DueDate</option><option>Jurisdiction</option><option>ProjectCode</option><option>PublishedDate</option><option>Title</option>
             </select>
@@ -68,6 +68,42 @@
           "DueDate": { "type": "string", "format": "date-time" },
           "AgentName": { "type": "string", "minLength": 1 },
           "BidDocuments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "Title": { "type": "string", "minLength": 1 },
+                "URL": { "type": "string", "format": "uri", "minLength": 1 },
+                "Hash": { "type": "string", "minLength": 1 }
+              },
+              "required": ["Title", "URL", "Hash"]
+            }
+          },
+          "AddendumDocuments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "Title": { "type": "string", "minLength": 1 },
+                "URL": { "type": "string", "format": "uri", "minLength": 1 },
+                "Hash": { "type": "string", "minLength": 1 }
+              },
+              "required": ["Title", "URL", "Hash"]
+            }
+          },
+          "BidTabulations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "Title": { "type": "string", "minLength": 1 },
+                "URL": { "type": "string", "format": "uri", "minLength": 1 },
+                "Hash": { "type": "string", "minLength": 1 }
+              },
+              "required": ["Title", "URL", "Hash"]
+            }
+          },
+          "AwardDocuments": {
             "type": "array",
             "items": {
               "type": "object",
