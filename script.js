@@ -1511,6 +1511,31 @@ function formatFieldValue(value) {
     return String(value);
 }
 
+const ALLOWED_BID_DOCUMENT_EXTENSIONS = new Set(['doc', 'docx', 'xls', 'xlsx', 'pdf']);
+
+function isBidDocumentUrlPath(path) {
+    return /^\/BidDocuments\/\d+\/URL$/.test(String(path || ''));
+}
+
+function getUrlFileExtension(urlValue) {
+    if (typeof urlValue !== 'string' || !urlValue.trim()) {
+        return '';
+    }
+
+    try {
+        const parsed = new URL(urlValue.trim());
+        const pathName = String(parsed.pathname || '');
+        const lastSegment = pathName.split('/').filter(Boolean).pop() || '';
+        if (!lastSegment.includes('.')) {
+            return '';
+        }
+
+        return lastSegment.split('.').pop().toLowerCase();
+    } catch {
+        return '';
+    }
+}
+
 function createItemValidator(schema) {
     return function validateItem(item) {
         const errors = [];
@@ -1610,13 +1635,21 @@ function validateBySchema(value, schema, path, errors, requiredFields) {
             }
 
             if (schema.format === 'uri') {
+                let parsedUri;
                 try {
-                    const parsed = new URL(value);
-                    if (!parsed.protocol || !parsed.host) {
+                    parsedUri = new URL(value);
+                    if (!parsedUri.protocol || !parsedUri.host) {
                         errors.push({ instancePath: path, message: 'must match format "uri"' });
                     }
                 } catch {
                     errors.push({ instancePath: path, message: 'must match format "uri"' });
+                }
+
+                if (parsedUri && isBidDocumentUrlPath(path)) {
+                    const extension = getUrlFileExtension(value);
+                    if (!ALLOWED_BID_DOCUMENT_EXTENSIONS.has(extension)) {
+                        errors.push({ instancePath: path, message: 'must reference a .doc, .docx, .xls, .xlsx, or .pdf file' });
+                    }
                 }
             }
 
