@@ -1265,7 +1265,7 @@ async function validateFiles() {
                         index: idx,
                         field,
                         path: err.instancePath,
-                        value: getFieldValueByPath(item, err.instancePath),
+                        value: getErrorDisplayValue(item, err),
                         message: err.message,
                         record: item
                     });
@@ -1476,23 +1476,68 @@ function getFieldFromPath(path) {
     }, '');
 }
 
-function getFieldValueByPath(item, path) {
-    if (!path) {
-        return item;
-    }
-
+function getFieldValuesByPath(item, path) {
     const tokens = String(path).split('/').filter(Boolean);
-    return tokens.reduce((current, token) => {
-        if (current === undefined || current === null) {
-            return undefined;
+
+    function walk(current, index) {
+        if (index >= tokens.length) {
+            return [current];
         }
+
+        if (current === undefined || current === null) {
+            return [];
+        }
+
+        const token = tokens[index];
 
         if (/^\d+$/.test(token)) {
-            return Array.isArray(current) ? current[Number(token)] : undefined;
+            if (!Array.isArray(current)) {
+                return [];
+            }
+
+            return walk(current[Number(token)], index + 1);
         }
 
-        return current[token];
-    }, item);
+        if (token.endsWith('[]')) {
+            const arrayKey = token.slice(0, -2);
+            const source = arrayKey ? current[arrayKey] : current;
+
+            if (!Array.isArray(source)) {
+                return [];
+            }
+
+            return source.flatMap(entry => walk(entry, index + 1));
+        }
+
+        return walk(current[token], index + 1);
+    }
+
+    return walk(item, 0);
+}
+
+function getErrorDisplayValue(item, error) {
+    const values = getFieldValuesByPath(item, error && error.instancePath);
+    if (!values.length) {
+        return undefined;
+    }
+
+    const message = String(error && error.message || '').toLowerCase();
+    if (message.includes('must reference a .doc, .docx, .xls, .xlsx, or .pdf file')) {
+        const mismatchedUrl = values.find(value => {
+            if (typeof value !== 'string' || !value.trim()) {
+                return false;
+            }
+
+            const extension = getUrlFileExtension(value);
+            return !ALLOWED_BID_DOCUMENT_EXTENSIONS.has(extension);
+        });
+
+        if (mismatchedUrl !== undefined) {
+            return mismatchedUrl;
+        }
+    }
+
+    return values.find(value => value !== undefined && value !== null) ?? values[0];
 }
 
 function formatFieldValue(value) {
