@@ -168,6 +168,11 @@ No installation is required.
 
 The validator checks each input record against the schema in the JSON Schema editor.
 
+Bid document URL rule:
+- `BidDocuments[].URL` must be a valid URI.
+- The URL path must end with one of these file extensions: `.doc`, `.docx`, `.xls`, `.xlsx`, `.pdf`.
+- Any other file extension (or no extension) fails validation.
+
 High-level flow:
 1. You choose required fields and click **Apply to Schema**.
 2. The app writes those fields into `schema.properties.Export.items.required`.
@@ -211,6 +216,7 @@ High-level flow:
 - Syntax-highlighted JSON in Selected Error Record viewer.
 - Selected record key highlighting for the exact field/path causing each error.
 - Nested-path fallback highlighting that marks the nearest parent key when an exact nested match is not renderable (for example some `BidDocuments[]` errors).
+- `BidDocuments[].URL` file-type validation (only `.doc`, `.docx`, `.xls`, `.xlsx`, `.pdf` are accepted).
 - In-view legend text explaining highlighted key behavior.
 - Missing-key summary hint for required-field errors when the key does not exist in the record.
 - Export buttons:
