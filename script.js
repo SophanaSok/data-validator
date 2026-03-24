@@ -251,7 +251,7 @@ function updateSelectAllButtonLabel(selectElement, selectAllBtn = document.getEl
 }
 
 function handleErrorFilterChange(e) {
-    const filter = e.target.closest('.error-field-filter, .error-value-filter, .error-render-limit');
+    const filter = e.target.closest('.error-field-filter, .error-render-limit');
     if (!filter) {
         return;
     }
@@ -273,10 +273,8 @@ function applyErrorFilters(source, options = {}) {
     const sourceKey = source === 'all' ? 'all' : 'top';
     const sourceErrors = sourceKey === 'all' ? allErrorsPreview : topErrorsPreview;
     const selectedFieldElement = ui.results.querySelector(sourceKey === 'all' ? '#allErrorFieldFilter' : '#topErrorFieldFilter');
-    const valueQueryElement = ui.results.querySelector(sourceKey === 'all' ? '#allErrorValueFilter' : '#topErrorValueFilter');
 
     const selectedField = selectedFieldElement ? selectedFieldElement.value : '';
-    const valueQuery = valueQueryElement ? valueQueryElement.value : '';
 
     if (sourceKey === 'all' && resetVisible) {
         allErrorsVisibleCount = ALL_ERRORS_INITIAL_RENDER_COUNT;
@@ -285,7 +283,6 @@ function applyErrorFilters(source, options = {}) {
     const filteredEntries = filterErrorEntries(
         sourceErrors,
         selectedField,
-        valueQuery,
         sourceKey === 'all' ? allErrorsScopedFilter : null
     );
 
@@ -792,11 +789,6 @@ function filterErrorsByBadRecords() {
         filterSelect.value = '';
     }
 
-    const valueFilter = ui.results.querySelector('#allErrorValueFilter');
-    if (valueFilter) {
-        valueFilter.value = '';
-    }
-
     stopAllErrorsAutoRender();
     allErrorsScopedFilter = (error, index) => statBreakdownState.badRecordIndices.has(index);
     applyErrorFilters('all', { resetVisible: true });
@@ -1017,11 +1009,6 @@ function filterAllErrorsBySeverity(severity) {
             filterSelect.value = '';
         }
 
-        const valueFilter = ui.results.querySelector('#allErrorValueFilter');
-        if (valueFilter) {
-            valueFilter.value = '';
-        }
-
         stopAllErrorsAutoRender();
         allErrorsScopedFilter = (error) => getErrorSeverityType(error.message) === severity;
         applyErrorFilters('all', { resetVisible: true });
@@ -1197,22 +1184,13 @@ function buildErrorFieldFilterOptions(errors) {
         .join('');
 }
 
-function filterErrorEntries(errors, selectedField, valueQuery = '', includeEntry = null) {
+function filterErrorEntries(errors, selectedField, includeEntry = null) {
     const expectedField = String(selectedField || '');
-    const expectedValue = String(valueQuery || '').trim().toLowerCase();
 
     return (errors || [])
         .map((error, index) => ({ error, index }))
         .filter(({ error, index }) => !includeEntry || includeEntry(error, index))
-        .filter(({ error }) => !expectedField || error.field === expectedField)
-        .filter(({ error }) => {
-            if (!expectedValue) {
-                return true;
-            }
-
-            const formattedValue = formatFieldValue(error.value).toLowerCase();
-            return formattedValue.includes(expectedValue);
-        });
+        .filter(({ error }) => !expectedField || error.field === expectedField);
 }
 
 function renderErrorRowsForTable(entries, source) {
@@ -1656,8 +1634,6 @@ async function validateFiles() {
                             <select id="allErrorFieldFilter" class="error-field-filter" data-filter-source="all">
                                 ${allFieldOptions}
                             </select>
-                            <label for="allErrorValueFilter">Filter by value</label>
-                            <input id="allErrorValueFilter" class="error-value-filter" data-filter-source="all" type="search" placeholder="Contains value text..." aria-label="Filter errors by value">
                             <span id="allErrorsCount" class="error-filter-count">${Math.min(ALL_ERRORS_INITIAL_RENDER_COUNT, allErrorsPreview.length)} shown of ${allErrorsPreview.length} filtered (${allErrorsPreview.length} total)</span>
                         </div>
                         <div class="error-render-controls">

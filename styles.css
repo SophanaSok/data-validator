@@ -788,8 +788,7 @@ tr:hover {
     font-weight: 600;
 }
 
-.error-field-filter,
-.error-value-filter {
+.error-field-filter {
     max-width: 340px;
     min-width: 220px;
     padding: 8px 10px;
@@ -1041,8 +1040,7 @@ tbody tr:nth-child(even) {
         width: auto;
     }
 
-    .error-field-filter,
-    .error-value-filter {
+    .error-field-filter {
         width: 100%;
         max-width: none;
         min-width: 0;

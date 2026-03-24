@@ -158,7 +158,7 @@ No installation is required.
   - Clicking a field chip filters the **All Errors** table to that field.
 - **All Errors Panel**:
   - Collapsed by default.
-  - Optional filters for narrowing rows by error field and value text.
+  - Optional field filter for narrowing rows by error field.
   - Sortable columns (`File`, `Record #`, `Field`, `Value`, `Error`) with ascending/descending toggle.
   - Incremental rendering with **Load more** to avoid UI lockups on very large result sets.
   - Optional **Render all progressively** mode streams rows in animation-frame batches.
