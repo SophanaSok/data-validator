@@ -48,7 +48,7 @@ No installation is required.
 1. The following four fields are **preselected by default**: `AgentName`, `AgentID`, `LegacyAgentID`, and `ResourceURL`.
 2. **Quickly select all fields**: Click the **Select All** button next to the label to select all available fields. Once all are selected, the label switches to **Deselect All** so you can clear all fields in one click.
 3. Adjust the selection with normal clicks: click once to select, click again to deselect (no modifier keys required). Selecting fields will **not** jump the scroll position to the top.
-4. Watch the live `Selected: field1, field2, field3...` indicator under the selector as you choose fields. It displays the actual names of all selected fields in real time.
+4. Watch the live `Selected: ...` indicator under the selector as you choose fields. It displays the current selected field names in real time.
 5. Optionally add more names in **Manual Required Fields**.
 6. Click **Apply to Schema**.
 7. Confirm the top toast notification showing how many required fields were applied.
@@ -102,10 +102,10 @@ No installation is required.
 4. For missing required fields, no key can be highlighted because the key is absent in the JSON object.
 5. In that case, the record summary includes **key missing in record**.
 
-### 6.2 Review uncapped errors
+### 6.2 Review all errors
 
 1. Expand **All Errors** in the results panel.
-2. This table contains every error row found in the batch (not limited to 50 rows).
+2. This table shows filtered errors with progressive rendering controls for large datasets.
 3. Optionally filter **All Errors** by field.
 4. Click any row to load the full JSON record in **Selected Error Record**.
 
@@ -244,7 +244,7 @@ High-level flow:
 - Editable schema text area.
 - Required field selector with click-to-toggle behavior (click to select, click again to deselect).
 - Select-all control that toggles label/state between `Select All` and `Deselect All`.
-- Live selected-count helper (`Selected: X fields`) below the required-field selector.
+- Live selected-fields helper (`Selected: ...`) below the required-field selector.
 - Manual required field input (comma or newline separated).
 - Progress bar during validation.
 - Auto-scroll to generated validation results after validation completes.
@@ -260,7 +260,7 @@ High-level flow:
 - Pipeline gate status:
   - `Pipeline Ready` when pass rate is at least `95%`
   - `Gate Failed` when pass rate is below `95%`
-- Collapsible **All Errors** table containing every error row (uncapped).
+- Collapsible **All Errors** table with progressive rendering controls for large result sets.
 - Field filter for **All Errors** table.
 - Sortable columns for **All Errors** table.
 - Clickable all-error rows with the same full-record viewer behavior.
@@ -309,7 +309,7 @@ Notes:
 - Manual required fields are merged with selected fields.
 - Duplicate field names are removed automatically.
 - You can select or deselect any field with a single click before applying to schema.
-- A live `Selected: X fields` helper shows the current selection count.
+- A live `Selected: ...` helper shows the currently selected field names.
 
 ## Input JSON Shapes Supported
 
@@ -365,7 +365,7 @@ Important behavior details:
   - empty/whitespace string
   - empty array
 - Invalid JSON files are skipped silently during batch parse.
-- The **All Errors** panel shows the uncapped full list in the UI.
+- The **All Errors** panel uses progressive rendering controls to keep the UI responsive on large result sets.
 - The **All Errors** table can also be filtered by field.
 - Full error data is also available in downloads.
 - `date-time` accepts:
@@ -486,7 +486,7 @@ Fix:
 
 ## What Changed Recently
 
-- Added a collapsible **All Errors** panel with uncapped error rows.
+- Added a collapsible **All Errors** panel with progressive rendering controls for large error sets.
 - Added row-click support in **All Errors** to open **Selected Error Record**.
 - Added key-level highlighting in **Selected Error Record** for the field/path causing the selected error.
 - Added an inline legend and missing-key summary hint for required-field errors.
