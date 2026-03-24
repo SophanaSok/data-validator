@@ -158,7 +158,7 @@ No installation is required.
   - Clicking a field chip filters the **All Errors** table to that field.
 - **All Errors Panel**:
   - Collapsed by default.
-  - Optional field filter for narrowing rows by error field.
+  - Optional filters for narrowing rows by error field and value text.
   - Sortable columns (`File`, `Record #`, `Field`, `Value`, `Error`) with ascending/descending toggle.
   - Expand to see every error row (uncapped).
   - Click row to load record detail panel and auto-scroll to it.

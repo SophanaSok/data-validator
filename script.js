@@ -153,7 +153,8 @@ function bindUIEvents() {
                 showErrorRecord(row.dataset.errorIndex, row.dataset.errorSource);
             }
         });
-        ui.results.addEventListener('change', handleErrorFieldFilterChange);
+        ui.results.addEventListener('change', handleErrorFilterChange);
+        ui.results.addEventListener('input', handleErrorFilterChange);
     }
 
     ['dragover', 'drop'].forEach(event => {
@@ -233,23 +234,29 @@ function updateSelectAllButtonLabel(selectElement, selectAllBtn = document.getEl
     selectAllBtn.setAttribute('title', actionLabel);
 }
 
-function handleErrorFieldFilterChange(e) {
-    const filter = e.target.closest('.error-field-filter');
+function handleErrorFilterChange(e) {
+    const filter = e.target.closest('.error-field-filter, .error-value-filter');
     if (!filter) {
         return;
     }
 
-    applyErrorFieldFilter(filter.dataset.filterSource, filter.value);
+    applyErrorFilters(filter.dataset.filterSource);
 }
 
-function applyErrorFieldFilter(source, selectedField) {
+function applyErrorFilters(source) {
     if (!ui || !ui.results) {
         return;
     }
 
     const sourceKey = source === 'all' ? 'all' : 'top';
     const sourceErrors = sourceKey === 'all' ? allErrorsPreview : topErrorsPreview;
-    const filteredEntries = filterErrorsByField(sourceErrors, selectedField);
+    const selectedFieldElement = ui.results.querySelector(sourceKey === 'all' ? '#allErrorFieldFilter' : '#topErrorFieldFilter');
+    const valueQueryElement = ui.results.querySelector(sourceKey === 'all' ? '#allErrorValueFilter' : '#topErrorValueFilter');
+
+    const selectedField = selectedFieldElement ? selectedFieldElement.value : '';
+    const valueQuery = valueQueryElement ? valueQueryElement.value : '';
+
+    const filteredEntries = filterErrorEntries(sourceErrors, selectedField, valueQuery);
     const sortedEntries = sortErrorEntries(filteredEntries, sourceKey);
 
     const tableBody = ui.results.querySelector(sourceKey === 'all' ? '#allErrorsBody' : '#topErrorsBody');
@@ -289,9 +296,7 @@ function handleErrorSortHeaderClick(e) {
         state.direction = 'asc';
     }
 
-    const filterElement = ui.results.querySelector(source === 'all' ? '#allErrorFieldFilter' : '#topErrorFieldFilter');
-    const selectedField = filterElement ? filterElement.value : '';
-    applyErrorFieldFilter(source, selectedField);
+    applyErrorFilters(source);
 }
 
 function renderErrorTableHead(source) {
@@ -994,16 +999,26 @@ function buildErrorFieldFilterOptions(errors) {
         .join('');
 }
 
-function filterErrorsByField(errors, selectedField) {
+function filterErrorEntries(errors, selectedField, valueQuery = '') {
     const expectedField = String(selectedField || '');
+    const expectedValue = String(valueQuery || '').trim().toLowerCase();
+
     return (errors || [])
         .map((error, index) => ({ error, index }))
-        .filter(({ error }) => !expectedField || error.field === expectedField);
+        .filter(({ error }) => !expectedField || error.field === expectedField)
+        .filter(({ error }) => {
+            if (!expectedValue) {
+                return true;
+            }
+
+            const formattedValue = formatFieldValue(error.value).toLowerCase();
+            return formattedValue.includes(expectedValue);
+        });
 }
 
 function renderErrorRowsForTable(entries, source) {
     if (!entries.length) {
-        return '<tr><td colspan="5">No errors match the selected field.</td></tr>';
+        return '<tr><td colspan="5">No errors match the selected filters.</td></tr>';
     }
 
     return entries
@@ -1415,6 +1430,8 @@ async function validateFiles() {
                             <select id="allErrorFieldFilter" class="error-field-filter" data-filter-source="all">
                                 ${allFieldOptions}
                             </select>
+                            <label for="allErrorValueFilter">Filter by value</label>
+                            <input id="allErrorValueFilter" class="error-value-filter" data-filter-source="all" type="search" placeholder="Contains value text..." aria-label="Filter errors by value">
                             <span id="allErrorsCount" class="error-filter-count">${allErrorsPreview.length} of ${allErrorsPreview.length}</span>
                         </div>
                         <div class="all-errors-table-wrap">
@@ -1423,7 +1440,7 @@ async function validateFiles() {
                                     ${renderErrorTableHead('all')}
                                 </thead>
                                 <tbody id="allErrorsBody">
-                                ${renderErrorRowsForTable(filterErrorsByField(allErrorsPreview, ''), 'all')}
+                                ${renderErrorRowsForTable(filterErrorEntries(allErrorsPreview, '', ''), 'all')}
                                 </tbody>
                             </table>
                         </div>
