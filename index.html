@@ -1,144 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bid Data Validator - Scraped JSON Gate</title>
-  <script>
-    (function () {
-      const STORAGE_KEY = 'app-theme-mode';
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const mode = saved === 'dark' || saved === 'light' || saved === 'system' ? saved : 'system';
-      const systemTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      const resolvedTheme = mode === 'system' ? systemTheme : mode;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d7bc4">
+  <meta name="description" content="Find nearby free and paid water refill dispensers around you.">
+  <title>Water Refill Finder</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-      document.documentElement.dataset.themeMode = mode;
-      document.documentElement.dataset.theme = resolvedTheme;
-      document.documentElement.style.colorScheme = resolvedTheme;
-    })();
-  </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <!-- Leaflet CSS (loaded from CDN; cached by SW) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚫 Bid Data Validator</h1>
-            <div class="header-controls">
-            <a class="readme-link" href="readme.html" target="_blank" rel="noopener noreferrer">User Guide</a>
-                <span class="engine-badge" aria-label="Validation engine status" data-tooltip="Validation runs in your browser only. No data is sent to a server." title="Validation runs in your browser only. No data is sent to a server." tabindex="0">Validation Engine: Local</span>
-        <button id="themeToggle" class="theme-toggle" type="button">Theme: 🖥️ System</button>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="select-header">
-                <label>Select Required Fields <small>(Click to select, click again to deselect, then Apply)</small></label>
-                <button id="selectAllBtn" type="button" class="select-all-btn">Select All</button>
-            </div>
-            <select id="requiredFields" multiple>
-                <option selected>AgentName</option><option selected>AgentID</option><option selected>LegacyAgentID</option><option selected>ResourceURL</option>
-              <option>AwardDate</option><option value="BidDocuments">BidDocuments[]</option><option value="AddendumDocuments">AddendumDocuments[]</option><option value="BidTabulations">BidTabulations[]</option><option value="AwardDocuments">AwardDocuments[]</option><option>BidStatus</option><option>BidType</option>
-                <option>BidURL</option><option>Description</option>
-                <option>DueDate</option><option>Jurisdiction</option><option>ProjectCode</option><option>PublishedDate</option><option>Title</option>
-            </select>
-            <p id="requiredSelectionCount" class="selection-count" aria-live="polite"></p>
-              <label for="manualRequiredFields">Manual Required Fields <small>(comma or new line separated)</small></label>
-              <textarea id="manualRequiredFields" class="manual-required-input" rows="3" placeholder="Example: ProjectCode, Title, BidStatus"></textarea>
-            <button id="applySchemaBtn" type="button">✅ Apply to Schema</button>
-            <p class="field-hint">Only fields selected and applied as required are validated. Unselected fields (for example BidDocuments[]) are ignored in Top Errors.</p>
-        </div>
-        
-        <div class="card">
-            <label>JSON Schema <small>(Auto-updates from selection)</small></label>
-            <textarea id="schema">{
-  "type": "object",
-  "properties": {
-    "Export": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "ProjectCode": { "type": "string", "pattern": "^SRC\\d+$" },
-          "AgentID": { "type": "string", "minLength": 1 },
-          "Title": { "type": "string", "minLength": 5 },
-          "BidStatus": { "type": "string" },
-          "BidURL": { "type": "string", "format": "uri" },
-          "PublishedDate": { "type": "string", "format": "date-time" },
-          "DueDate": { "type": "string", "format": "date-time" },
-          "AgentName": { "type": "string", "minLength": 1 },
-          "BidDocuments": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "Title": { "type": "string", "minLength": 1 },
-                "URL": { "type": "string", "format": "uri", "minLength": 1 },
-                "Hash": { "type": "string", "minLength": 1 }
-              },
-              "required": ["Title", "URL", "Hash"]
-            }
-          },
-          "AddendumDocuments": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "Title": { "type": "string", "minLength": 1 },
-                "URL": { "type": "string", "format": "uri", "minLength": 1 },
-                "Hash": { "type": "string", "minLength": 1 }
-              },
-              "required": ["Title", "URL", "Hash"]
-            }
-          },
-          "BidTabulations": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "Title": { "type": "string", "minLength": 1 },
-                "URL": { "type": "string", "format": "uri", "minLength": 1 },
-                "Hash": { "type": "string", "minLength": 1 }
-              },
-              "required": ["Title", "URL", "Hash"]
-            }
-          },
-          "AwardDocuments": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "Title": { "type": "string", "minLength": 1 },
-                "URL": { "type": "string", "format": "uri", "minLength": 1 },
-                "Hash": { "type": "string", "minLength": 1 }
-              },
-              "required": ["Title", "URL", "Hash"]
-            }
-          }
-        }
-      }
-    }
-  },
-  "required": ["Export"]
-}</textarea>
-        </div>
-        
-        <div class="card">
-            <label>Drop Scraped JSON Files Here</label>
-            <label id="fileDrop" class="file-drop" for="jsonFile" role="button" tabindex="0">
-                📁 Drag .json files or click to browse (multiple OK)
-            </label>
-            <input type="file" id="jsonFile" class="file-input" accept=".json,application/json,text/json" multiple>
-            <div id="fileList" class="file-list" aria-live="polite"></div>
-        </div>
-        
-        <button id="validateBtn" type="button" style="width:100%; font-size:1.1rem;">🚀 Validate Batch</button>
-        
-        <div id="progress" class="progress" style="display:none;"><div id="progressBar" class="progress-bar"></div></div>
-        <div id="results"></div>
+
+  <!-- ── App shell ───────────────────────────────────────────────────── -->
+  <header class="app-header">
+    <span class="app-logo">💧</span>
+    <h1 class="app-title">Water Refill Finder</h1>
+    <button id="addBtn" class="btn btn-icon" aria-label="Add refill point" title="Add refill point">＋</button>
+  </header>
+
+  <main>
+    <!-- Skeleton shown while loading -->
+    <div id="skeleton" class="skeleton-wrap" aria-hidden="true">
+      <div class="skeleton-map"></div>
+      <div class="skeleton-pin"></div>
+      <div class="skeleton-list">
+        <div class="skeleton-item"></div>
+        <div class="skeleton-item"></div>
+        <div class="skeleton-item"></div>
+      </div>
     </div>
 
-    <script src="theme.js"></script>
-    <script src="script.js"></script>
+    <!-- Map container -->
+    <div id="map" class="map-container" aria-label="Map of nearby water refill points"></div>
+
+    <!-- Status / error banner -->
+    <div id="statusBanner" class="status-banner" role="status" aria-live="polite" hidden></div>
+
+    <!-- Nearby list -->
+    <section class="nearby-section" aria-label="Nearby refill points">
+      <h2 class="section-title">Nearby Refill Points</h2>
+      <ul id="stationList" class="station-list" aria-live="polite">
+        <!-- Populated by main.js -->
+      </ul>
+      <p id="emptyMsg" class="empty-msg" hidden>No refill points found nearby.</p>
+    </section>
+
+    <!-- Detail panel (shown when a marker / list item is tapped) -->
+    <div id="detailPanel" class="detail-panel" role="dialog" aria-modal="true" aria-label="Refill point details" hidden>
+      <button class="detail-close" id="detailClose" aria-label="Close details">✕</button>
+      <h3 id="detailName" class="detail-name"></h3>
+      <p id="detailAddress" class="detail-row"></p>
+      <p id="detailType" class="detail-row"></p>
+      <p id="detailFree" class="detail-row"></p>
+      <p id="detailVerified" class="detail-row"></p>
+    </div>
+  </main>
+
+  <!-- ── Add refill point form / modal ──────────────────────────────── -->
+  <div id="formOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Add refill point" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Add Refill Point</h2>
+        <button id="formClose" class="btn btn-icon" aria-label="Close form">✕</button>
+      </div>
+      <form id="addForm" novalidate>
+        <label class="form-label" for="fLat">Latitude <span aria-hidden="true">*</span></label>
+        <input id="fLat" class="form-input" type="number" step="any" required placeholder="e.g. 40.748">
+
+        <label class="form-label" for="fLng">Longitude <span aria-hidden="true">*</span></label>
+        <input id="fLng" class="form-input" type="number" step="any" required placeholder="e.g. -73.985">
+
+        <label class="form-label" for="fName">Name <small>(optional)</small></label>
+        <input id="fName" class="form-input" type="text" placeholder="e.g. Park Fountain">
+
+        <label class="form-label" for="fType">Type</label>
+        <select id="fType" class="form-input">
+          <option value="drinking_water">Drinking Water</option>
+          <option value="vending_machine_water">Vending Machine Water</option>
+        </select>
+
+        <label class="form-label checkbox-label">
+          <input id="fFree" type="checkbox" checked>
+          Free to use
+        </label>
+
+        <label class="form-label" for="fAddress">Address <small>(optional)</small></label>
+        <input id="fAddress" class="form-input" type="text" placeholder="e.g. 123 Main St">
+
+        <div id="formError" class="form-error" role="alert" hidden></div>
+        <div id="formOfflineNote" class="form-offline" hidden>📶 You're offline – submission will be sent when reconnected.</div>
+
+        <button type="submit" class="btn btn-primary btn-full">Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WPaI=" crossorigin=""></script>
+  <!-- Static fallback data -->
+  <script src="data/mock-stations.js"></script>
+  <!-- App logic -->
+  <script src="main.js"></script>
 </body>
 </html>
