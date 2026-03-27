@@ -105,7 +105,15 @@ async function loadStations(lat, lng) {
   let data;
   try {
     const url = `${API_BASE}?lat=${lat}&lng=${lng}&radius_km=${DEFAULT_RADIUS}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    // Manual abort controller for broader browser compatibility
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    let res;
+    try {
+      res = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     data = await res.json();
 
@@ -233,7 +241,7 @@ addBtn.addEventListener('click', () => {
   document.getElementById('fLat').value = userLat.toFixed(6);
   document.getElementById('fLng').value = userLng.toFixed(6);
   formError.hidden = true;
-  formOffline.hidden = !(!navigator.onLine);
+  formOffline.hidden = navigator.onLine;
   formOverlay.hidden = false;
   document.getElementById('fName').focus();
 });
