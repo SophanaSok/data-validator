@@ -558,7 +558,7 @@ function getSortableErrorValue(error, key) {
 }
 
 function buildErrorFieldBreakdown(errors) {
-    const fieldCounts = {};
+    const fieldCounts = Object.create(null);
     (errors || []).forEach(err => {
         const field = err.field || '(root)';
         fieldCounts[field] = (fieldCounts[field] || 0) + 1;
@@ -630,7 +630,7 @@ function handleTopErrorFieldInsightClick(e) {
 }
 
 function buildPerFileBreakdown(errors, allErrors) {
-    const fileBreakdown = {};
+    const fileBreakdown = Object.create(null);
     (errors || []).forEach(err => {
         const file = err.file || '(unknown)';
         if (!fileBreakdown[file]) {
@@ -679,7 +679,7 @@ function buildErrorSeverityBreakdown(errors) {
 }
 
 function buildPerFilePassRates(good, bad, files) {
-    const fileBreakdown = {};
+    const fileBreakdown = Object.create(null);
     
     files.forEach(file => {
         fileBreakdown[file.name] = {
@@ -1552,8 +1552,10 @@ async function validateFiles() {
     // Build stat breakdown state for interactive features
     const fileSet = new Set();
     const badRecordIndices = new Set();
-    const errorsByFile = {};
-    const errorsByField = {};
+    // Keyed by uploaded file names and field names, so no prototype: a file
+    // named "__proto__" must be an ordinary key, not Object.prototype.
+    const errorsByFile = Object.create(null);
+    const errorsByField = Object.create(null);
 
     allErrors.forEach((err, idx) => {
         const file = err.file || '(unknown)';
