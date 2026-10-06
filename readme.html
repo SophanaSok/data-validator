@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; font-src https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; script-src 'self' 'sha256-hhM9G/dSmxs14Cr76d+QuS4T5GMldxUae8xJsFbnaUg='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com">
     <title>Bid Data Validator - User Guide</title>
     <script>
         (function () {
@@ -20,7 +21,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown.min.css">
+    <link rel="stylesheet" href="vendor/github-markdown-css-5.8.1/github-markdown.css">
     <link rel="stylesheet" href="readme.css">
 </head>
 <body>
@@ -40,7 +41,7 @@
     </main>
 
     <script src="theme.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="vendor/marked-15.0.12/marked.min.js"></script>
     <script src="readme.js"></script>
 </body>
 </html>

@@ -144,6 +144,8 @@ function bindUIEvents() {
         ui.results.addEventListener('click', handleClearAllErrorsScopeClick);
         ui.results.addEventListener('click', handleErrorSortHeaderClick);
         ui.results.addEventListener('click', handleTopErrorRowClick);
+        ui.results.addEventListener('click', handleStatDetailsCloseClick);
+        ui.results.addEventListener('click', handleDownloadClick);
         ui.results.addEventListener('keydown', e => {
             const stat = e.target.closest('.stat');
             if (stat && (e.key === 'Enter' || e.key === ' ')) {
@@ -556,7 +558,7 @@ function getSortableErrorValue(error, key) {
 }
 
 function buildErrorFieldBreakdown(errors) {
-    const fieldCounts = {};
+    const fieldCounts = Object.create(null);
     (errors || []).forEach(err => {
         const field = err.field || '(root)';
         fieldCounts[field] = (fieldCounts[field] || 0) + 1;
@@ -578,6 +580,41 @@ function buildTopErrorFieldInsights(errorsByField, totalErrors, limit = 5) {
         .slice(0, limit);
 }
 
+// The Content-Security-Policy forbids inline on* attributes, so the results
+// buttons are wired here by delegation instead of with onclick="...".
+function handleStatDetailsCloseClick(e) {
+    const button = e.target.closest('.stat-details-close');
+    if (!button) {
+        return;
+    }
+
+    const panel = button.closest('#statDetailsPanel');
+    if (panel) {
+        panel.hidden = true;
+    }
+}
+
+function handleDownloadClick(e) {
+    const button = e.target.closest('[data-download]');
+    if (!button) {
+        return;
+    }
+
+    switch (button.dataset.download) {
+        case 'good':
+            download('good-bids.json', lastValidationData.good);
+            break;
+        case 'bad':
+            download('bad-bids.json', lastValidationData.bad);
+            break;
+        case 'errors':
+            download('errors.csv', toCSV(lastValidationData.errors));
+            break;
+        default:
+            break;
+    }
+}
+
 function handleTopErrorFieldInsightClick(e) {
     const button = e.target.closest('.top-field-chip');
     if (!button || !ui || !ui.results) {
@@ -593,7 +630,7 @@ function handleTopErrorFieldInsightClick(e) {
 }
 
 function buildPerFileBreakdown(errors, allErrors) {
-    const fileBreakdown = {};
+    const fileBreakdown = Object.create(null);
     (errors || []).forEach(err => {
         const file = err.file || '(unknown)';
         if (!fileBreakdown[file]) {
@@ -642,7 +679,7 @@ function buildErrorSeverityBreakdown(errors) {
 }
 
 function buildPerFilePassRates(good, bad, files) {
-    const fileBreakdown = {};
+    const fileBreakdown = Object.create(null);
     
     files.forEach(file => {
         fileBreakdown[file.name] = {
@@ -1515,8 +1552,10 @@ async function validateFiles() {
     // Build stat breakdown state for interactive features
     const fileSet = new Set();
     const badRecordIndices = new Set();
-    const errorsByFile = {};
-    const errorsByField = {};
+    // Keyed by uploaded file names and field names, so no prototype: a file
+    // named "__proto__" must be an ordinary key, not Object.prototype.
+    const errorsByFile = Object.create(null);
+    const errorsByField = Object.create(null);
 
     allErrors.forEach((err, idx) => {
         const file = err.file || '(unknown)';
@@ -1615,7 +1654,7 @@ async function validateFiles() {
                 <div id="statDetailsPanel" class="card stat-details-panel" hidden>
                     <div class="stat-details-panel-header">
                         <h3 id="statDetailsPanelTitle">Per-file breakdown</h3>
-                        <button type="button" class="stat-details-close" aria-label="Close per-file breakdown" onclick="this.closest('#statDetailsPanel').hidden = true">Close</button>
+                        <button type="button" class="stat-details-close" aria-label="Close per-file breakdown">Close</button>
                     </div>
                     <div id="statDetailsPanelBody"></div>
                 </div>
@@ -1666,9 +1705,9 @@ async function validateFiles() {
 
                 <div id="resultsDownloads" class="card">
                     <h3>⬇️ Downloads</h3>
-                    <button class="success" onclick="download('good-bids.json', lastValidationData.good)">✅ Good Records JSON</button>
-                    <button class="danger" onclick="download('bad-bids.json', lastValidationData.bad)">❌ Bad Records JSON</button>
-                    <button onclick="download('errors.csv', toCSV(lastValidationData.errors))">📊 Error Report CSV</button>
+                    <button type="button" class="success" data-download="good">✅ Good Records JSON</button>
+                    <button type="button" class="danger" data-download="bad">❌ Bad Records JSON</button>
+                    <button type="button" data-download="errors">📊 Error Report CSV</button>
                 </div>
             </div>
         </div>
