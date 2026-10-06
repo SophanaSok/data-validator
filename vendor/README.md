@@ -26,3 +26,10 @@ tar -xzf github-markdown-css-<version>.tgz && cp package/github-markdown.css pac
 Then point `readme.html` at the new directory, delete the old one, and open
 `readme.html` over http (for example `python3 -m http.server 8000`) to check
 the guide still renders with no CSP errors in the console.
+
+## Inline script hashes
+
+Each page's theme bootstrap `<script>` is allowed by its SHA-256 hash in the
+page's CSP `<meta>`. After editing that script, run
+`python3 tools/csp-hashes.py` and paste the printed hash into the meta;
+`python3 tools/csp-hashes.py --check` exits non-zero while one is missing.
